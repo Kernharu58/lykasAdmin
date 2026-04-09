@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import AddPetModal from '../components/pets/AddPetModal';
+import EditPetModal from '../components/pets/EditPetModal';
 
 // Define the shape of our Pet data
 interface Pet {
@@ -16,7 +17,10 @@ export default function ManagePets() {
   const [searchQuery, setSearchQuery] = useState('');
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPet, setSelectedPet] = useState<any>(null);
 
   // Function to fetch pets from MongoDB
   const fetchPets = async () => {
@@ -42,7 +46,7 @@ export default function ManagePets() {
     pet.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // 👉 NEW: Function to delete a pet
+  // Function to delete a pet
   const handleDelete = async (petId: string, petName: string) => {
     // Show a confirmation pop-up first so they don't accidentally delete!
     if (window.confirm(`Are you sure you want to remove ${petName} from the shelter?`)) {
@@ -112,16 +116,30 @@ export default function ManagePets() {
                   <p className="text-gray-500 text-sm mt-1">{pet.breed}</p>
                 </div>
                 
+                {/* 👉 FIXED: Edit and Trash Buttons */}
                 <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
+                  
+                  {/* EDIT BUTTON */}
                   <button 
-                  onClick={() => handleDelete(pet._id, petName)} // 👉 ADDED onClick handler
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Delete Pet">
+                    onClick={() => {
+                      setSelectedPet(pet);
+                      setIsEditModalOpen(true);
+                    }}
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Edit Pet"
+                  >
                     <Edit size={18} />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+
+                  {/* DELETE BUTTON */}
+                  <button 
+                    onClick={() => handleDelete(pet._id, pet.name)} // 👉 FIXED: pet.name
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Pet"
+                  >
                     <Trash2 size={18} />
                   </button>
+
                 </div>
               </div>
 
@@ -130,11 +148,19 @@ export default function ManagePets() {
         </div>
       )}
 
-      {/* The Pop-up Form */}
+      {/* The Add Pop-up Form */}
       <AddPetModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onPetAdded={fetchPets} // Refreshes the grid automatically!
+        onPetAdded={fetchPets} 
+      />
+
+      {/* 👉 ADDED: The Edit Pop-up Form */}
+      <EditPetModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onPetUpdated={fetchPets}
+        pet={selectedPet}
       />
     </div>
   );

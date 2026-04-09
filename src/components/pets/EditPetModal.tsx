@@ -1,14 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '../../services/api';
 
-interface AddPetModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onPetAdded: () => void;
+// The shape of the pet data coming from your MongoDB
+interface Pet {
+  _id: string;
+  name: string;
+  species: string;
+  breed: string;
+  age: string;
+  gender: string;
+  weight: string;
+  healthStatus: string;
+  description: string;
+  imageUrl: string;
+  status: string;
 }
 
-export default function AddPetModal({ isOpen, onClose, onPetAdded }: AddPetModalProps) {
+interface EditPetModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPetUpdated: () => void; // Refresh the grid after editing
+  pet: Pet | null;          // The specific pet we are editing
+}
+
+export default function EditPetModal({ isOpen, onClose, onPetUpdated, pet }: EditPetModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     species: 'Dog',
@@ -16,24 +32,44 @@ export default function AddPetModal({ isOpen, onClose, onPetAdded }: AddPetModal
     age: '',
     gender: 'Male',
     weight: '',
-    healthStatus: 'Vaccinated',
+    healthStatus: '',
     description: '',
-    imageUrl: '', 
+    imageUrl: '',
+    status: 'Available', // We can now update the adoption status!
   });
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  // 👉 This is the magic! Whenever the 'pet' prop changes, we fill the form!
+  useEffect(() => {
+    if (pet) {
+      setFormData({
+        name: pet.name || '',
+        species: pet.species || 'Dog',
+        breed: pet.breed || '',
+        age: pet.age || '',
+        gender: pet.gender || 'Male',
+        weight: pet.weight || '',
+        healthStatus: pet.healthStatus || '',
+        description: pet.description || '',
+        imageUrl: pet.imageUrl || '',
+        status: pet.status || 'Available'
+      });
+    }
+  }, [pet]);
+
+  if (!isOpen || !pet) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/pets', formData);
-      onPetAdded(); 
-      onClose();    
+      // Send the PUT request to your Node.js backend to update the pet
+      await api.put(`/pets/${pet._id}`, formData);
+      onPetUpdated(); 
+      onClose();   
     } catch (error) {
-      console.error("Error adding pet:", error);
-      alert("Failed to add pet. Please check the console.");
+      console.error("Error updating pet:", error);
+      alert("Failed to update pet. Please check the console.");
     } finally {
       setLoading(false);
     }
@@ -42,19 +78,24 @@ export default function AddPetModal({ isOpen, onClose, onPetAdded }: AddPetModal
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl">
+        
+        {/* Header */}
         <div className="bg-[#1B2A49] p-6 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">Add New Pet</h2>
+          <h2 className="text-xl font-bold text-white">Edit Pet: {pet.name}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={24} />
           </button>
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 max-h-[80vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            
+            {/* Left Column */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input required type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-[#2D6A4F] focus:border-[#2D6A4F]"
+                <input required type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5"
                   value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               </div>
               <div>
@@ -80,16 +121,12 @@ export default function AddPetModal({ isOpen, onClose, onPetAdded }: AddPetModal
               </div>
             </div>
 
+            {/* Right Column */}
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
                 <input required type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5"
                   value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
-                <input type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5"
-                  value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Health Status</label>
@@ -101,6 +138,17 @@ export default function AddPetModal({ isOpen, onClose, onPetAdded }: AddPetModal
                 <input required type="text" className="w-full border border-gray-200 rounded-xl px-4 py-2.5"
                   value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} />
               </div>
+              
+              {/* 👉 NEW: Adoption Status Dropdown */}
+              <div>
+                <label className="block text-sm font-bold text-[#D08C60] mb-1">Adoption Status</label>
+                <select className="w-full border border-orange-200 bg-orange-50 rounded-xl px-4 py-2.5 text-[#1B2A49] font-medium"
+                  value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                  <option value="Available">Available</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Adopted">Adopted</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -110,15 +158,17 @@ export default function AddPetModal({ isOpen, onClose, onPetAdded }: AddPetModal
               value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
           </div>
 
+          {/* Footer Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl font-bold text-white bg-[#2D6A4F] hover:bg-[#1f4a37] transition-colors disabled:opacity-50">
-              {loading ? 'Adding...' : 'Save Pet'}
+            <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl font-bold text-white bg-[#D08C60] hover:bg-[#b0744d] transition-colors disabled:opacity-50">
+              {loading ? 'Updating...' : 'Update Pet'}
             </button>
           </div>
         </form>
+
       </div>
     </div>
   );
