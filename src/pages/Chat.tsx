@@ -15,7 +15,7 @@ interface User {
 
 interface Message {
   _id?: string;
-  userId: string; // 👉 Now we track WHO the message belongs to
+  userId: string; // Tracks WHO the message belongs to
   text: string;
   sender: 'user' | 'shelter';
   time: string;
@@ -42,7 +42,7 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // 👉 1. Initial Load: Connect Socket & Fetch User List
+  // 1. Initial Load: Connect Socket & Fetch User List
   useEffect(() => {
     const fetchActiveSessions = async () => {
       try {
@@ -60,7 +60,7 @@ export default function Chat() {
 
     socketRef.current.on('connect', () => {
       setIsConnected(true);
-      // 👉 Join the special master room so Admin hears all incoming messages
+      // Join the special master room so Admin hears all incoming messages
       socketRef.current?.emit("joinAdmin");
     });
 
@@ -71,7 +71,7 @@ export default function Chat() {
     };
   }, []);
 
-  // 👉 2. Listen for incoming messages (Needs to know the selected user)
+  // 2. Listen for incoming messages (Needs to know the selected user)
   useEffect(() => {
     if (!socketRef.current) return;
 
@@ -83,13 +83,15 @@ export default function Chat() {
       if (selectedUser && newMessage.userId === selectedUser._id) {
         setMessages((prev) => [...prev, newMessage]);
       } else {
-        // Optional: In the future, you could add a "New!" badge to the sidebar here
-        console.log("Received background message from another user");
+        // Refresh the user list if a brand new user sends a message
+        if (!activeUsers.find(u => u._id === newMessage.userId)) {
+           api.get('/chat-sessions').then(res => setActiveUsers(res.data));
+        }
       }
     });
-  }, [selectedUser]);
+  }, [selectedUser, activeUsers]);
 
-  // 👉 3. Fetch history when Admin clicks on a user
+  // 3. Fetch history when Admin clicks on a user
   useEffect(() => {
     if (!selectedUser) return;
 
@@ -107,7 +109,7 @@ export default function Chat() {
     fetchUserHistory();
   }, [selectedUser]);
 
-  // 👉 4. Send Message Logic
+  // 4. Send Message Logic (ADMIN SPECIFIC)
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !socketRef.current || !selectedUser) return;
@@ -120,6 +122,8 @@ export default function Chat() {
     };
 
     socketRef.current.emit('sendMessage', messageData);
+    
+    // We removed the optimistic setMessages here to prevent duplicates!
     setInputText('');
   };
 
@@ -150,7 +154,7 @@ export default function Chat() {
       {/* Main Chat Layout */}
       <div className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 flex overflow-hidden">
         
-        {/* 👉 LEFT SIDEBAR: Active Users List */}
+        {/* LEFT SIDEBAR: Active Users List */}
         <div className="w-1/3 border-r border-gray-100 bg-gray-50/50 flex flex-col">
           <div className="p-5 border-b border-gray-100 bg-white">
             <h2 className="font-bold text-[#1B2A49] flex items-center">
@@ -189,7 +193,7 @@ export default function Chat() {
           </div>
         </div>
 
-        {/* 👉 RIGHT SIDEBAR: Private Chat Window */}
+        {/* RIGHT SIDEBAR: Private Chat Window */}
         <div className="flex-1 flex flex-col bg-slate-50/50 relative">
           
           {!selectedUser ? (
