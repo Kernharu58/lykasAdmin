@@ -4,7 +4,6 @@ import api from '../services/api';
 import AddPetModal from '../components/pets/AddPetModal';
 import EditPetModal from '../components/pets/EditPetModal';
 
-// Define the shape of our Pet data
 interface Pet {
   _id: string;
   name: string;
@@ -22,11 +21,11 @@ export default function ManagePets() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPet, setSelectedPet] = useState<any>(null);
 
-  // Function to fetch pets from MongoDB
   const fetchPets = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/pets');
+      // 👉 FIX: Added ?all=true so the admin sees Adopted pets too!
+      const response = await api.get('/pets?all=true');
       setPets(response.data);
     } catch (error) {
       console.error("Failed to fetch pets:", error);
@@ -35,24 +34,20 @@ export default function ManagePets() {
     }
   };
 
-  // Run this once when the page loads
   useEffect(() => {
     fetchPets();
   }, []);
 
-  // Filter the pets based on the search box
   const filteredPets = pets.filter(pet => 
     pet.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     pet.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Function to delete a pet
   const handleDelete = async (petId: string, petName: string) => {
-    // Show a confirmation pop-up first so they don't accidentally delete!
     if (window.confirm(`Are you sure you want to remove ${petName} from the shelter?`)) {
       try {
-        await api.delete(`/pets/${petId}`); // Tell the Node.js backend to delete it
-        fetchPets(); // Instantly refresh the grid!
+        await api.delete(`/pets/${petId}`); 
+        fetchPets(); 
       } catch (error) {
         console.error("Failed to delete pet:", error);
         alert("Could not delete the pet. Check the console.");
@@ -62,7 +57,6 @@ export default function ManagePets() {
 
   return (
     <div className="p-8">
-      {/* Header Area */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-[#1B2A49]">Manage Pets</h1>
@@ -77,7 +71,6 @@ export default function ManagePets() {
         </button>
       </div>
 
-      {/* Search and Filter */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 flex items-center">
         <Search className="text-gray-400 ml-2 mr-3" size={20} />
         <input 
@@ -89,7 +82,6 @@ export default function ManagePets() {
         />
       </div>
 
-      {/* Pets Grid */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <p className="text-gray-500 font-medium">Loading pets from database...</p>
@@ -116,10 +108,7 @@ export default function ManagePets() {
                   <p className="text-gray-500 text-sm mt-1">{pet.breed}</p>
                 </div>
                 
-                {/* 👉 FIXED: Edit and Trash Buttons */}
                 <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-100">
-                  
-                  {/* EDIT BUTTON */}
                   <button 
                     onClick={() => {
                       setSelectedPet(pet);
@@ -131,35 +120,31 @@ export default function ManagePets() {
                     <Edit size={18} />
                   </button>
 
-                  {/* DELETE BUTTON */}
                   <button 
-                    onClick={() => handleDelete(pet._id, pet.name)} // 👉 FIXED: pet.name
+                    onClick={() => handleDelete(pet._id, pet.name)} 
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete Pet"
                   >
                     <Trash2 size={18} />
                   </button>
-
                 </div>
               </div>
-
             </div>
           ))}
         </div>
       )}
 
-      {/* The Add Pop-up Form */}
+      {/* 👉 FIX: Updated prop names to onSuccess to match the modal files */}
       <AddPetModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onPetAdded={fetchPets} 
+        onSuccess={fetchPets} 
       />
 
-      {/* 👉 ADDED: The Edit Pop-up Form */}
       <EditPetModal 
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        onPetUpdated={fetchPets}
+        onSuccess={fetchPets}
         pet={selectedPet}
       />
     </div>
