@@ -6,6 +6,7 @@ import ManagePets from './pages/ManagePets';
 import Shifts from './pages/Shifts';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
+
 // We use a Layout wrapper to decide if we should show the Sidebar or not!
 function Layout() {
   const location = useLocation();
