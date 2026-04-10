@@ -6,6 +6,7 @@ import ManagePets from './pages/ManagePets';
 import Shifts from './pages/Shifts';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
+import Donations from './pages/Donations';
 
 // We use a Layout wrapper to decide if we should show the Sidebar or not!
 function Layout() {
@@ -31,6 +32,7 @@ function Layout() {
           <Route path="/pets" element={<ManagePets />} />
           <Route path="/shifts" element={<Shifts />} />
           <Route path="/chat" element={<Chat />} />  
+          <Route path="/donations" element={<Donations />} />
           <Route path="/settings" element={<Settings />} /> 
         </Routes>
       </div>
