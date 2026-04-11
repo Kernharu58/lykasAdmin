@@ -1,266 +1,242 @@
-import { useState, useEffect, useRef } from 'react';
-import { Send, User as UserIcon, Clock, CheckCheck, Inbox } from 'lucide-react';
-import { io, Socket } from 'socket.io-client';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, Search, User as UserIcon } from 'lucide-react';
 import api from '../services/api';
+import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
 
-interface User {
-  _id: string;
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-  email?: string;
-}
-
-interface Message {
-  _id?: string;
-  userId: string; // Tracks WHO the message belongs to
-  text: string;
-  sender: 'user' | 'shelter';
-  time: string;
-}
-
 export default function Chat() {
-  const [activeUsers, setActiveUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputText, setInputText] = useState("");
   
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // We use a ref for selectedUser so the Socket listener always knows who is currently open
+  const selectedUserRef = useRef(selectedUser);
 
-  // Smooth scroll
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => {
+    selectedUserRef.current = selectedUser;
+  }, [selectedUser]);
+
+  // Auto-scroll to the bottom when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const fetchSessions = async () => {
+    try {
+      const response = await api.get('/chat-sessions');
+      setSessions(response.data);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+    }
+  };
+
+  const fetchMessages = async (userId: string) => {
+    try {
+      const response = await api.get(`/messages/${userId}`);
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    fetchSessions(); // Initial load
 
-  // 1. Initial Load: Connect Socket & Fetch User List
-  useEffect(() => {
-    const fetchActiveSessions = async () => {
-      try {
-        const response = await api.get('/chat-sessions');
-        setActiveUsers(response.data);
-      } catch (error) {
-        console.error("Could not fetch chat sessions:", error);
-      }
-    };
-    fetchActiveSessions();
-
+    // Connect to Socket
     socketRef.current = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['websocket', 'polling']
     });
 
-    socketRef.current.on('connect', () => {
-      setIsConnected(true);
-      // Join the special master room so Admin hears all incoming messages
+    socketRef.current.on("connect", () => {
       socketRef.current?.emit("joinAdmin");
     });
 
-    socketRef.current.on('disconnect', () => setIsConnected(false));
+    // Listen for incoming messages from ANY user
+    socketRef.current.on("receiveMessage", (newMessage) => {
+      
+      // 1. Instantly refresh the sidebar! (This brings the sender to the top)
+      fetchSessions();
+
+      // 2. If the admin is actively looking at the sender's chat, show the message on screen
+      if (selectedUserRef.current && newMessage.userId === selectedUserRef.current._id) {
+        setMessages((prev) => {
+          // 👉 FIX: The Silent Swap Logic
+          // Find if this is a message we already optimistically added to the screen
+          const existingIndex = prev.findIndex(
+            (msg) => msg.text === newMessage.text && msg.time === newMessage.time && msg.sender === newMessage.sender
+          );
+
+          if (existingIndex !== -1) {
+            // Silent Swap: Replace the local mock message with the real Database message
+            const newArray = [...prev];
+            newArray[existingIndex] = newMessage;
+            return newArray;
+          }
+
+          // Otherwise, it's a brand new message from the user, add it to the bottom
+          return [...prev, newMessage];
+        });
+      }
+    });
 
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      socketRef.current?.disconnect();
     };
   }, []);
 
-  // 2. Listen for incoming messages (Needs to know the selected user)
-  useEffect(() => {
-    if (!socketRef.current) return;
-
-    // Remove old listener before adding a new one (prevents duplicate messages)
-    socketRef.current.off('receiveMessage');
-
-    socketRef.current.on('receiveMessage', (newMessage: Message) => {
-      // Only append the message to the screen IF it belongs to the user we are currently talking to!
-      if (selectedUser && newMessage.userId === selectedUser._id) {
-        setMessages((prev) => [...prev, newMessage]);
-      } else {
-        // Refresh the user list if a brand new user sends a message
-        if (!activeUsers.find(u => u._id === newMessage.userId)) {
-           api.get('/chat-sessions').then(res => setActiveUsers(res.data));
-        }
-      }
-    });
-  }, [selectedUser, activeUsers]);
-
-  // 3. Fetch history when Admin clicks on a user
-  useEffect(() => {
-    if (!selectedUser) return;
-
-    const fetchUserHistory = async () => {
-      setIsLoadingHistory(true);
-      try {
-        const response = await api.get(`/messages/${selectedUser._id}`);
-        setMessages(response.data);
-      } catch (error) {
-        console.error("Could not fetch user history:", error);
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    };
-    fetchUserHistory();
-  }, [selectedUser]);
-
-  // 4. Send Message Logic (ADMIN SPECIFIC)
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim() || !socketRef.current || !selectedUser) return;
-
-    const messageData = {
-      userId: selectedUser._id, // Tell backend exactly which room to route this to
-      text: inputText,
-      sender: 'shelter', 
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    socketRef.current.emit('sendMessage', messageData);
-    
-    // We removed the optimistic setMessages here to prevent duplicates!
-    setInputText('');
+  const handleUserSelect = (user: any) => {
+    setSelectedUser(user);
+    fetchMessages(user._id);
   };
 
-  // Helper to format user display name securely
-  const getDisplayName = (u: User) => {
-    if (u.firstName && u.lastName) return `${u.firstName} ${u.lastName}`;
-    if (u.name) return u.name;
-    if (u.email) return u.email.split('@')[0];
-    return "Anonymous User";
+  const sendMessage = () => {
+    if (!inputText.trim() || !selectedUser || !socketRef.current) return;
+
+    const messageData = {
+      userId: selectedUser._id,
+      text: inputText.trim(),
+      sender: "shelter",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    // Emit to backend
+    socketRef.current.emit("sendMessage", messageData);
+    
+    // 👉 FIX: Optimistically update the UI instantly using a clear local ID
+    const optimisticMessage = { ...messageData, _id: "local_" + Date.now().toString() };
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setInputText("");
+    
+    // Slight delay to allow the DB to save before refreshing the sidebar to bump this chat to the top
+    setTimeout(fetchSessions, 300);
   };
 
   return (
-    <div className="p-8 h-[calc(100vh-2rem)] flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1B2A49]">Support Inbox</h1>
-          <p className="text-gray-500 mt-1">Manage private conversations with adopters.</p>
+    <div className="flex h-[calc(100vh-2rem)] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden m-8">
+      
+      {/* Sidebar: Chat List */}
+      <div className="w-1/3 border-r border-gray-100 bg-gray-50 flex flex-col">
+        <div className="p-4 border-b border-gray-100 bg-white flex-shrink-0">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search users..." 
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+            />
+          </div>
         </div>
-        <div className="flex items-center bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
-          <div className={`w-2.5 h-2.5 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
-          <span className="text-sm font-medium text-gray-700">
-            {isConnected ? 'System Online' : 'Connecting...'}
-          </span>
+        
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {sessions.length === 0 ? (
+            <div className="p-4 text-center text-gray-500 text-sm mt-10">No active chats.</div>
+          ) : (
+            sessions.map((user) => (
+              <button 
+                key={user._id}
+                onClick={() => handleUserSelect(user)}
+                className={`w-full text-left p-4 border-b border-gray-100 flex items-center gap-3 transition-colors ${
+                  selectedUser?._id === user._id ? 'bg-emerald-50' : 'hover:bg-gray-100'
+                }`}
+              >
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200 flex-shrink-0">
+                  {user.profilePicture ? (
+                    <img src={user.profilePicture} alt={user.displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    user.displayName ? user.displayName.charAt(0).toUpperCase() : <UserIcon size={20} />
+                  )}
+                </div>
+                
+                <div className="flex-1 overflow-hidden">
+                  <h3 className={`font-semibold truncate ${selectedUser?._id === user._id ? 'text-emerald-800' : 'text-gray-800'}`}>
+                    {user.displayName || "Unknown User"}
+                  </h3>
+                  <p className="text-xs text-gray-500 truncate">Click to view conversation</p>
+                </div>
+              </button>
+            ))
+          )}
         </div>
       </div>
 
-      {/* Main Chat Layout */}
-      <div className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 flex overflow-hidden">
-        
-        {/* LEFT SIDEBAR: Active Users List */}
-        <div className="w-1/3 border-r border-gray-100 bg-gray-50/50 flex flex-col">
-          <div className="p-5 border-b border-gray-100 bg-white">
-            <h2 className="font-bold text-[#1B2A49] flex items-center">
-              <Inbox size={18} className="mr-2 text-[#2D6A4F]" />
-              Active Conversations ({activeUsers.length})
-            </h2>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto">
-            {activeUsers.length === 0 ? (
-              <div className="p-6 text-center text-gray-400 text-sm">No active conversations yet.</div>
-            ) : (
-              activeUsers.map((u) => {
-                const isSelected = selectedUser?._id === u._id;
-                return (
-                  <div 
-                    key={u._id}
-                    onClick={() => setSelectedUser(u)}
-                    className={`p-5 border-b border-gray-100 cursor-pointer transition-colors ${
-                      isSelected ? 'bg-[#2D6A4F]/10 border-l-4 border-l-[#2D6A4F]' : 'hover:bg-gray-100 bg-white border-l-4 border-l-transparent'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-[#1B2A49] flex items-center truncate">
-                        <UserIcon size={18} className={`mr-2 p-1 rounded-full shadow-sm ${isSelected ? 'text-[#2D6A4F] bg-white' : 'text-gray-400 bg-gray-100'}`} />
-                        {getDisplayName(u)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 truncate pl-7">
-                       ID: {u._id.substring(0, 8)}...
-                    </p>
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT SIDEBAR: Private Chat Window */}
-        <div className="flex-1 flex flex-col bg-slate-50/50 relative">
-          
-          {!selectedUser ? (
-             // No user selected state
-             <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-               <Inbox size={48} className="mb-4 opacity-20" />
-               <p>Select a conversation from the left to start chatting.</p>
-             </div>
-          ) : (
-            <>
-              {/* Active Chat Header */}
-              <div className="bg-white p-4 border-b border-gray-100 flex items-center shadow-sm z-10">
-                 <h3 className="font-bold text-[#1B2A49]">Chatting with: {getDisplayName(selectedUser)}</h3>
-              </div>
-
-              {/* Messages Area */}
-              <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                {isLoadingHistory ? (
-                   <div className="flex justify-center items-center h-full text-gray-400">Loading history...</div>
-                ) : messages.length === 0 ? (
-                   <div className="flex justify-center items-center h-full text-gray-400">No messages in this channel yet.</div>
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-white">
+        {selectedUser ? (
+          <>
+            {/* Chat Window Header */}
+            <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-white flex-shrink-0">
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200">
+                {selectedUser.profilePicture ? (
+                  <img src={selectedUser.profilePicture} alt={selectedUser.displayName} className="w-full h-full object-cover" />
                 ) : (
-                  messages.map((msg, idx) => {
-                    const isShelter = msg.sender === 'shelter';
-                    return (
-                      <div key={idx} className={`flex ${isShelter ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[70%] rounded-2xl px-5 py-3 shadow-sm ${
-                          isShelter 
-                            ? 'bg-[#2D6A4F] text-white rounded-br-sm' 
-                            : 'bg-white border border-gray-100 text-[#1B2A49] rounded-bl-sm'
-                        }`}>
-                          <p className="text-[15px] leading-relaxed">{msg.text}</p>
-                          <div className={`flex items-center gap-1 text-[10px] mt-1.5 ${isShelter ? 'text-green-200 justify-end' : 'text-gray-400 justify-start'}`}>
-                            {msg.time}
-                            {isShelter && <CheckCheck size={12} />}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })
+                  selectedUser.displayName ? selectedUser.displayName.charAt(0).toUpperCase() : <UserIcon size={18} />
                 )}
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800">{selectedUser.displayName || "Unknown User"}</h3>
+                <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block"></span>
+                  Active session
+                </p>
+              </div>
+            </div>
+
+            {/* Chat Bubbles */}
+            <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 custom-scrollbar">
+              <div className="flex flex-col gap-4">
+                {messages.map((msg, index) => {
+                  const isShelter = msg.sender === 'shelter';
+                  return (
+                    <div key={msg._id || index} className={`flex flex-col max-w-[75%] ${isShelter ? 'self-end items-end' : 'self-start items-start'}`}>
+                      <div className={`px-4 py-2.5 rounded-2xl ${
+                        isShelter ? 'bg-emerald-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
+                      }`}>
+                        <p className="text-sm">{msg.text}</p>
+                      </div>
+                      <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.time}</span>
+                    </div>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
+            </div>
 
-              {/* Input Area */}
-              <div className="p-4 bg-white border-t border-gray-100">
-                <form onSubmit={sendMessage} className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder={isConnected ? `Reply to ${getDisplayName(selectedUser)}...` : "Connecting to chat server..."}
-                    disabled={!isConnected}
-                    className="flex-1 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]/20 focus:border-[#2D6A4F] text-[#1B2A49] bg-gray-50 focus:bg-white transition-all disabled:opacity-50"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                  />
-                  <button 
-                    type="submit"
-                    disabled={!inputText.trim() || !isConnected}
-                    className="bg-[#2D6A4F] text-white p-3 rounded-xl hover:bg-[#1f4a37] shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-14"
-                  >
-                    <Send size={20} className={inputText.trim() ? "translate-x-0.5 -translate-y-0.5 transition-transform" : ""} />
-                  </button>
-                </form>
+            {/* Message Input Box */}
+            <div className="p-4 bg-white border-t border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                  placeholder="Type a response to the user..." 
+                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm transition-all"
+                />
+                <button 
+                  onClick={sendMessage}
+                  disabled={!inputText.trim()}
+                  className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:hover:bg-emerald-600 shadow-sm"
+                >
+                  <Send size={18} className="ml-1" />
+                </button>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50/30">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <UserIcon size={40} className="text-gray-300" />
+            </div>
+            <p className="text-lg font-bold text-gray-600">Select a conversation</p>
+            <p className="text-sm mt-1 text-gray-500">Choose a user from the sidebar to start chatting.</p>
+          </div>
+        )}
       </div>
     </div>
   );
