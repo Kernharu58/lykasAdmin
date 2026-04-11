@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+// 👉 NEW: Imported useLocation
+import { useLocation } from 'react-router-dom';
 import { Send, Search, User as UserIcon } from 'lucide-react';
 import api from '../services/api';
 import { io, Socket } from 'socket.io-client';
@@ -6,17 +8,17 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
 
 export default function Chat() {
+  // 👉 NEW: Hook to catch the passed state
+  const location = useLocation();
+
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState("");
-  
-  // 👉 NEW: State to make the Search Bar work!
   const [searchTerm, setSearchTerm] = useState("");
   
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
   const selectedUserRef = useRef(selectedUser);
 
   useEffect(() => {
@@ -31,8 +33,10 @@ export default function Chat() {
     try {
       const response = await api.get('/chat-sessions');
       setSessions(response.data);
+      return response.data; // Return the data so we can use it instantly below
     } catch (error) {
       console.error("Error fetching sessions:", error);
+      return [];
     }
   };
 
@@ -46,7 +50,20 @@ export default function Chat() {
   };
 
   useEffect(() => {
-    fetchSessions(); 
+    // 👉 NEW: Check if we jumped here from another page (like Shifts.tsx)
+    const initChat = async () => {
+      const data = await fetchSessions();
+      
+      if (location.state && location.state.selectedUserId && data) {
+        const targetUser = data.find((u: any) => u._id === location.state.selectedUserId);
+        if (targetUser) {
+          handleUserSelect(targetUser);
+          // Clear the state so it doesn't try to auto-open if you refresh the page
+          window.history.replaceState({}, document.title);
+        }
+      }
+    };
+    initChat(); 
 
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket', 'polling']
@@ -104,7 +121,6 @@ export default function Chat() {
     setTimeout(fetchSessions, 300);
   };
 
-  // 👉 NEW: Filter the sidebar based on what the Admin types in the search bar
   const filteredSessions = sessions.filter(user => 
     (user.displayName || "Unknown User").toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -120,8 +136,8 @@ export default function Chat() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input 
               type="text" 
-              value={searchTerm} // 👉 Bound to state
-              onChange={(e) => setSearchTerm(e.target.value)} // 👉 Updates state
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)} 
               placeholder="Search users..." 
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
             />

@@ -8,6 +8,7 @@ import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import Donations from './pages/Donations';
 import Adoptions from './pages/Adoptions';
+import Accounts from './pages/Accounts';
 
 function Layout() {
   const location = useLocation();
@@ -32,6 +33,7 @@ function Layout() {
           <Route path="/shifts" element={<Shifts />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/donations" element={<Donations />} />
+          <Route path="/accounts" element={<Accounts />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>

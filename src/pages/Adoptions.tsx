@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, User as UserIcon, Mail } from 'lucide-react';
+// 👉 NEW: Imported useNavigate
+import { useNavigate } from 'react-router-dom';
+// 👉 NEW: Imported MessageSquare
+import { CheckCircle, XCircle, User as UserIcon, Mail, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 
 export default function Adoptions() {
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 👉 NEW: Initialize navigate
+  const navigate = useNavigate();
 
   const fetchApplications = async () => {
     try {
@@ -24,9 +30,8 @@ export default function Adoptions() {
   const handleApprove = async (petId: string, petName: string, userName: string) => {
     if (window.confirm(`Are you sure you want to approve ${userName} to adopt ${petName}?`)) {
       try {
-        // Change status to Adopted, leave the owner as is
         await api.put(`/pets/${petId}`, { status: 'Adopted' });
-        fetchApplications(); // Refresh list
+        fetchApplications(); 
       } catch (error) {
         console.error("Error approving adoption:", error);
         alert("Failed to approve adoption.");
@@ -37,9 +42,8 @@ export default function Adoptions() {
   const handleReject = async (petId: string) => {
     if (window.confirm("Are you sure you want to reject this application? The pet will become available again.")) {
       try {
-        // Change status back to Available, and clear the owner
         await api.put(`/pets/${petId}`, { status: 'Available', owner: null });
-        fetchApplications(); // Refresh list
+        fetchApplications(); 
       } catch (error) {
         console.error("Error rejecting adoption:", error);
         alert("Failed to reject adoption.");
@@ -84,6 +88,17 @@ export default function Adoptions() {
                       </p>
                     </div>
                   </div>
+                  
+                  {/* 👉 NEW: Navigation Button to jump to Chat */}
+                  {pet.owner?._id && (
+                    <button 
+                      onClick={() => navigate('/chat', { state: { selectedUserId: pet.owner._id } })}
+                      className="mt-5 flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-50 text-emerald-700 font-medium rounded-xl hover:bg-emerald-100 transition-colors"
+                    >
+                      <MessageSquare size={18} />
+                      Message Applicant
+                    </button>
+                  )}
                 </div>
 
                 {/* Pet Info Column */}
