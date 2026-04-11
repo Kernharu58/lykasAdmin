@@ -1,16 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, PawPrint, Calendar, MessageSquare, Settings, LogOut, HeartHandshake  } from 'lucide-react';
+import { Home, PawPrint, Calendar, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
 
-  // 👉 FIXED: Added Community Feed right here inside the array
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <Home size={20} /> },
+    { name: 'Adoption Apps', path: '/adoptions', icon: <ClipboardList size={20} /> },
     { name: 'Manage Pets', path: '/pets', icon: <PawPrint size={20} /> },
     { name: 'Shifts & Volunteers', path: '/shifts', icon: <Calendar size={20} /> },
     { name: 'Donations', path: '/donations', icon: <HeartHandshake size={20} /> },
-    { name: 'Live Chat', path: '/chat', icon: <MessageSquare size={20} /> }, 
+    { name: 'Live Chat', path: '/chat', icon: <MessageSquare size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 

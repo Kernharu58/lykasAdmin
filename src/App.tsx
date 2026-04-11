@@ -7,13 +7,12 @@ import Shifts from './pages/Shifts';
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import Donations from './pages/Donations';
+import Adoptions from './pages/Adoptions';
 
-// We use a Layout wrapper to decide if we should show the Sidebar or not!
 function Layout() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
 
-  // If they are on the login page, ONLY show the login page (no sidebar)
   if (isLoginPage) {
     return (
       <Routes>
@@ -22,31 +21,28 @@ function Layout() {
     );
   }
 
-  // Otherwise, show the full Dashboard layout with the Sidebar
   return (
     <div className="flex h-screen bg-gray-50 font-sans">
       <Sidebar />
       <div className="flex-1 ml-64 overflow-y-auto">
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/adoptions" element={<Adoptions />} />
           <Route path="/pets" element={<ManagePets />} />
           <Route path="/shifts" element={<Shifts />} />
-          <Route path="/chat" element={<Chat />} />  
+          <Route path="/chat" element={<Chat />} />
           <Route path="/donations" element={<Donations />} />
-          <Route path="/settings" element={<Settings />} /> 
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>
     </div>
   );
 }
 
-// Main App Component
-function App() {
+export default function App() {
   return (
     <Router>
       <Layout />
     </Router>
   );
 }
-
-export default App;
