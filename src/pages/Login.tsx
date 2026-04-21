@@ -1,71 +1,115 @@
 import { useState } from 'react';
-import { PawPrint, Mail, Lock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { PawPrint, Mail, Lock, AlertCircle } from 'lucide-react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, we'll just fake a login and send them to the dashboard!
-    // Later, we will connect this to your Node.js /api/auth/login route
-    console.log("Logging in with:", email);
-    navigate('/'); 
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { token, user } = response.data;
+
+      // Ensure user has correct roles before allowing login completion
+      if (user.role !== 'admin' && user.role !== 'staff') {
+        setError("Unauthorized: Access restricted to staff and admins.");
+        setIsLoading(false);
+        return;
+      }
+
+      login(token, user);
+      navigate('/'); 
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      
+      {/* Header Section */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Brand Logo */}
-        <div className="mx-auto w-16 h-16 bg-[#1B2A49] rounded-2xl flex items-center justify-center shadow-lg mb-6">
-          <PawPrint size={36} color="#4ade80" />
+        <div className="flex justify-center">
+          <PawPrint className="h-12 w-12 text-[#2D6A4F]" />
         </div>
-        <h2 className="text-center text-3xl font-extrabold text-[#1B2A49]">
-          CarePaws Admin
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Sign in to Dashboard
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Sign in to access the shelter dashboard
-        </p>
       </div>
 
+      {/* Form Section */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-2xl sm:px-10 border border-gray-100">
           <form className="space-y-6" onSubmit={handleLogin}>
             
-            {/* Email Field */}
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-2 shrink-0" />
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {/* Email Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-[#2D6A4F] focus:border-[#2D6A4F] sm:text-sm bg-gray-50 text-[#1B2A49]"
-                  placeholder="admin@carepaws.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-[#2D6A4F] focus:border-[#2D6A4F] py-2 border"
+                  placeholder="you@example.com"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
+                  id="password"
+                  name="password"
                   type="password"
+                  autoComplete="current-password"
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-[#2D6A4F] focus:border-[#2D6A4F] sm:text-sm bg-gray-50 text-[#1B2A49]"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-[#2D6A4F] focus:border-[#2D6A4F] py-2 border"
+                  placeholder="••••••••"
                 />
               </div>
             </div>
@@ -74,11 +118,14 @@ export default function Login() {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#2D6A4F] hover:bg-[#1f4a37] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2D6A4F] transition-colors"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white transition-colors
+                  ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2D6A4F] hover:bg-[#1f4a37] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2D6A4F]'}`}
               >
-                Sign in to Dashboard
+                {isLoading ? 'Signing in...' : 'Sign in to Dashboard'}
               </button>
             </div>
+            
           </form>
         </div>
       </div>

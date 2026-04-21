@@ -1,8 +1,6 @@
 import axios from 'axios';
 
-// This points to your existing Node.js backend
-// If you are using ngrok for the web version too, replace this URL!
-const API_URL = 'http://localhost:5000/api'; 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -11,17 +9,25 @@ const api = axios.create({
   },
 });
 
-// Interceptor to automatically add the JWT token to every request
 api.interceptors.request.use(
   (config) => {
-    // We use localStorage for the web admin instead of SecureStore
     const token = localStorage.getItem('adminToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
+  (error) => Promise.reject(error)
+);
+
+// Globally handle 401 Unauthorized responses
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('adminToken');
+      window.location.href = '/login'; // Force redirect to login
+    }
     return Promise.reject(error);
   }
 );

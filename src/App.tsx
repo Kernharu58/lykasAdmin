@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import ProtectedRoute from './components/layout/ProtectedRoute';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -10,32 +15,44 @@ import Donations from './pages/Donations';
 import Adoptions from './pages/Adoptions';
 import Accounts from './pages/Accounts';
 
-function Layout() {
-  const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
-
-  if (isLoginPage) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    );
-  }
+function AdminLayout() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans">
-      <Sidebar />
-      <div className="flex-1 ml-64 overflow-y-auto">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/adoptions" element={<Adoptions />} />
-          <Route path="/pets" element={<ManagePets />} />
-          <Route path="/shifts" element={<Shifts />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/donations" element={<Donations />} />
-          <Route path="/accounts" element={<Accounts />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
+    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
+      <div className="flex-1 flex flex-col lg:ml-64 w-full min-w-0 transition-all duration-300">
+        {/* Mobile Top Header */}
+        <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center shadow-sm z-30">
+          <button 
+            onClick={() => setIsSidebarOpen(true)} 
+            className="p-2 -ml-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+          >
+            <Menu size={24} />
+          </button>
+          <span className="font-bold text-[#1B2A49] text-lg">CarePaws Admin</span>
+        </div>
+
+        {/* Scrollable Page Content */}
+        <div className="flex-1 overflow-y-auto w-full">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/adoptions" element={<Adoptions />} />
+            <Route path="/pets" element={<ManagePets />} />
+            <Route path="/shifts" element={<Shifts />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/donations" element={<Donations />} />
+            {/* Example of Role-based restriction inside the layout */}
+            <Route path="/accounts" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Accounts />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );
@@ -43,8 +60,22 @@ function Layout() {
 
 export default function App() {
   return (
-    <Router>
-      <Layout />
-    </Router>
+    <AuthProvider>
+      <ToastProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/*" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </Router>
+      </ToastProvider>
+    </AuthProvider>
   );
 }

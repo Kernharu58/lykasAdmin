@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// 👉 NEW: Imported useLocation
 import { useLocation } from 'react-router-dom';
 import { Send, Search, User as UserIcon } from 'lucide-react';
 import api from '../services/api';
@@ -8,7 +7,6 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
 
 export default function Chat() {
-  // 👉 NEW: Hook to catch the passed state
   const location = useLocation();
 
   const [sessions, setSessions] = useState<any[]>([]);
@@ -33,7 +31,7 @@ export default function Chat() {
     try {
       const response = await api.get('/chat-sessions');
       setSessions(response.data);
-      return response.data; // Return the data so we can use it instantly below
+      return response.data;
     } catch (error) {
       console.error("Error fetching sessions:", error);
       return [];
@@ -50,7 +48,6 @@ export default function Chat() {
   };
 
   useEffect(() => {
-    // 👉 NEW: Check if we jumped here from another page (like Shifts.tsx)
     const initChat = async () => {
       const data = await fetchSessions();
       
@@ -58,16 +55,14 @@ export default function Chat() {
         const targetUser = data.find((u: any) => u._id === location.state.selectedUserId);
         if (targetUser) {
           handleUserSelect(targetUser);
-          // Clear the state so it doesn't try to auto-open if you refresh the page
           window.history.replaceState({}, document.title);
         }
       }
     };
     initChat(); 
 
-    socketRef.current = io(SOCKET_URL, {
-      transports: ['websocket', 'polling']
-    });
+    // 👉 FIX 1: Removed { transports: ['websocket', 'polling'] } so it stops crashing!
+    socketRef.current = io(SOCKET_URL);
 
     socketRef.current.on("connect", () => {
       socketRef.current?.emit("joinAdmin");
@@ -76,19 +71,9 @@ export default function Chat() {
     socketRef.current.on("receiveMessage", (newMessage) => {
       fetchSessions();
 
+      // 👉 FIX 2: Simplified update to instantly show the new message
       if (selectedUserRef.current && newMessage.userId === selectedUserRef.current._id) {
-        setMessages((prev) => {
-          const existingIndex = prev.findIndex(
-            (msg) => msg.text === newMessage.text && msg.time === newMessage.time && msg.sender === newMessage.sender
-          );
-
-          if (existingIndex !== -1) {
-            const newArray = [...prev];
-            newArray[existingIndex] = newMessage;
-            return newArray;
-          }
-          return [...prev, newMessage];
-        });
+        setMessages((prev) => [...prev, newMessage]);
       }
     });
 
@@ -112,11 +97,9 @@ export default function Chat() {
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    socketRef.current.emit("sendMessage", messageData);
-    
-    const optimisticMessage = { ...messageData, _id: "local_" + Date.now().toString() };
-    setMessages((prev) => [...prev, optimisticMessage]);
+    // 👉 FIX 3: Clear text and let the server bounce the message back to prevent duplicates
     setInputText("");
+    socketRef.current.emit("sendMessage", messageData);
     
     setTimeout(fetchSessions, 300);
   };

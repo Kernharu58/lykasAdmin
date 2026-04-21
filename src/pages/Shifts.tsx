@@ -128,7 +128,7 @@ export default function Shifts() {
                 </tr>
               ) : (
                 shifts.map((shift) => (
-                  <tr key={shift._id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                  <tr key={shift._id} key={shift._id} className="border-b border-gray-50 hover:bg-gray-50/50">
                     <td className="p-4 font-medium text-gray-800">{shift.title}</td>
                     <td className="p-4 text-gray-600 text-sm">{new Date(shift.date).toLocaleString()}</td>
                     <td className="p-4 text-gray-600 text-sm">{shift.durationHours} hours</td>

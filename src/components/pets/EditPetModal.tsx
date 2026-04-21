@@ -122,7 +122,7 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Age (Years) *</label>
-                <input required type="number" step="0.1" value={formData.age} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+                <input required type="text" step="0.1" value={formData.age} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all" placeholder="e.g., 2 years, 3 months"
                   onChange={(e) => setFormData({...formData, age: e.target.value})} />
               </div>
               <div>
