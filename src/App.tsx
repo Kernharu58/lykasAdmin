@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu } from 'lucide-react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -23,18 +24,13 @@ function AdminLayout() {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col lg:ml-64 w-full min-w-0 transition-all duration-300">
-        {/* Mobile Top Header */}
         <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center shadow-sm z-30">
-          <button 
-            onClick={() => setIsSidebarOpen(true)} 
-            className="p-2 -ml-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-          >
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-lg">
             <Menu size={24} />
           </button>
           <span className="font-bold text-[#1B2A49] text-lg">CarePaws Admin</span>
         </div>
 
-        {/* Scrollable Page Content */}
         <div className="flex-1 overflow-y-auto w-full">
           <Routes>
             <Route path="/" element={<Dashboard />} />
@@ -43,13 +39,15 @@ function AdminLayout() {
             <Route path="/shifts" element={<Shifts />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/donations" element={<Donations />} />
-            {/* Example of Role-based restriction inside the layout */}
+            <Route path="/settings" element={<Settings />} />
+            
+            {/* STRICT ADMIN-ONLY ROUTE */}
             <Route path="/accounts" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <Accounts />
               </ProtectedRoute>
             } />
-            <Route path="/settings" element={<Settings />} />
+            
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
@@ -59,23 +57,27 @@ function AdminLayout() {
 }
 
 export default function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route 
-              path="/*" 
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
-        </Router>
-      </ToastProvider>
-    </AuthProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <ToastProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route 
+                path="/*" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </Router>
+        </ToastProvider>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
