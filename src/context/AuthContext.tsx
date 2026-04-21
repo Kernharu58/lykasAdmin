@@ -1,13 +1,17 @@
+// C:\Users\Kernharu\Desktop\capstone_mid\lykas\client\src\context\AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
-import type { User } from './../types/auth';
+import type { User } from './../types/auth'; // Ensure User type has 'super_admin' and 'status'
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  isImpersonating: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  startImpersonation: (token: string, user: User) => void;
+  stopImpersonation: () => void;
   isAuthenticated: boolean;
 }
 
@@ -17,6 +21,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('adminToken'));
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track original token for impersonation
+  const [originalToken, setOriginalToken] = useState<string | null>(localStorage.getItem('originalAdminToken'));
 
   useEffect(() => {
     const verifySession = async () => {
@@ -27,14 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        // Fetch current user details
         const response = await api.get('/auth/me');
         setUser(response.data);
       } catch (error) {
         console.error("Session invalid or expired", error);
-        localStorage.removeItem('adminToken');
-        setToken(null);
-        setUser(null);
+        logout();
       } finally {
         setIsLoading(false);
       }
@@ -51,12 +55,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('originalAdminToken');
     setToken(null);
+    setOriginalToken(null);
     setUser(null);
   };
 
+  const startImpersonation = (newToken: string, targetUser: User) => {
+    if (!originalToken) {
+      localStorage.setItem('originalAdminToken', token!);
+      setOriginalToken(token);
+    }
+    localStorage.setItem('adminToken', newToken);
+    setToken(newToken);
+    setUser(targetUser);
+  };
+
+  const stopImpersonation = async () => {
+    if (originalToken) {
+      localStorage.setItem('adminToken', originalToken);
+      setToken(originalToken);
+      localStorage.removeItem('originalAdminToken');
+      setOriginalToken(null);
+      // Re-fetch original user details
+      try {
+         const res = await api.get('/auth/me', { headers: { Authorization: `Bearer ${originalToken}` }});
+         setUser(res.data);
+      } catch(e) {
+         logout();
+      }
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ 
+      user, token, isLoading, login, logout, 
+      startImpersonation, stopImpersonation, 
+      isImpersonating: !!originalToken, 
+      isAuthenticated: !!token 
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -64,8 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

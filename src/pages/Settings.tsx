@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Building, Phone, Mail } from 'lucide-react';
 import api from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 export default function Settings() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,8 @@ export default function Settings() {
   });
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  const { addToast } = useToast();
 
   // Fetch the current settings from the backend when the page loads
   useEffect(() => {
@@ -36,10 +39,10 @@ export default function Settings() {
     setLoading(true);
     try {
       await api.put('/settings', formData);
-      alert("Settings saved successfully!");
+      addToast('success', 'Settings saved successfully!');
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Failed to save settings.");
+      addToast('error', 'Failed to save settings.');
     } finally {
       setLoading(false);
     }

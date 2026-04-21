@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Send, Search, User as UserIcon } from 'lucide-react';
+import { Send, Search, User as UserIcon, ArrowLeft } from 'lucide-react';
 import api from '../services/api';
 import { io, Socket } from 'socket.io-client';
 
@@ -109,51 +109,52 @@ export default function Chat() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden m-8">
+    <div className="flex h-[calc(100dvh-70px)] lg:h-[calc(100vh-4rem)] bg-white lg:rounded-2xl lg:shadow-sm border-t lg:border border-slate-200 overflow-hidden lg:m-8">
       
-      {/* Sidebar: Chat List */}
-      <div className="w-1/3 border-r border-gray-100 bg-gray-50 flex flex-col">
-        <div className="p-4 border-b border-gray-100 bg-white flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
+      {/* Sidebar: Chat List (Hidden on mobile if user is selected) */}
+      <div className={`${selectedUser ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 border-r border-slate-200 bg-slate-50 flex-col`}>
+        <div className="p-4 border-b border-slate-200 bg-white flex-shrink-0">
+          <h2 className="text-xl font-extrabold text-slate-800 mb-4">Messages</h2>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              value={searchTerm}
+              value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
               placeholder="Search users..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-medium transition-all" 
             />
           </div>
         </div>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredSessions.length === 0 ? (
-            <div className="p-4 text-center text-gray-500 text-sm mt-10">
+            <div className="p-4 text-center text-slate-500 text-sm mt-10">
               {searchTerm ? "No users found matching that name." : "No users found."}
             </div>
           ) : (
             filteredSessions.map((user) => (
               <button 
-                key={user._id}
+                key={user._id} 
                 onClick={() => handleUserSelect(user)}
-                className={`w-full text-left p-4 border-b border-gray-100 flex items-center gap-3 transition-colors ${
-                  selectedUser?._id === user._id ? 'bg-emerald-50' : 'hover:bg-gray-100'
+                className={`w-full text-left p-4 border-b border-slate-100 flex items-center gap-3 transition-colors ${
+                  selectedUser?._id === user._id 
+                    ? 'bg-emerald-50/50 relative before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-emerald-500' 
+                    : 'hover:bg-slate-100'
                 }`}
               >
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200 flex-shrink-0">
+                <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 font-bold overflow-hidden shrink-0">
                   {user.profilePicture ? (
                     <img src={user.profilePicture} alt={user.displayName} className="w-full h-full object-cover" />
                   ) : (
                     user.displayName ? user.displayName.charAt(0).toUpperCase() : <UserIcon size={20} />
                   )}
                 </div>
-                
                 <div className="flex-1 overflow-hidden">
-                  <h3 className={`font-semibold truncate ${selectedUser?._id === user._id ? 'text-emerald-800' : 'text-gray-800'}`}>
+                  <h3 className={`font-bold truncate text-sm ${selectedUser?._id === user._id ? 'text-emerald-800' : 'text-slate-800'}`}>
                     {user.displayName || "Unknown User"}
                   </h3>
-                  <p className="text-xs text-gray-500 truncate">Click to view conversation</p>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">Click to view conversation</p>
                 </div>
               </button>
             ))
@@ -161,12 +162,18 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white">
+      {/* Main Chat Area (Hidden on mobile if NO user is selected) */}
+      <div className={`${!selectedUser ? 'hidden md:flex' : 'flex'} flex-1 flex-col bg-white w-full relative`}>
         {selectedUser ? (
           <>
-            <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-white flex-shrink-0">
-              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200">
+            <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center gap-3 bg-white shrink-0 shadow-sm z-10">
+              <button 
+                onClick={() => setSelectedUser(null)} 
+                className="md:hidden p-2 mr-1 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden shrink-0">
                 {selectedUser.profilePicture ? (
                   <img src={selectedUser.profilePicture} alt={selectedUser.displayName} className="w-full h-full object-cover" />
                 ) : (
@@ -174,18 +181,17 @@ export default function Chat() {
                 )}
               </div>
               <div>
-                <h3 className="font-bold text-gray-800">{selectedUser.displayName || "Unknown User"}</h3>
-                <p className="text-xs text-emerald-600 font-medium flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block"></span>
-                  Connected
+                <h3 className="font-bold text-slate-800 leading-tight">{selectedUser.displayName || "Unknown User"}</h3>
+                <p className="text-xs text-emerald-600 font-bold flex items-center gap-1.5 mt-0.5 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block animate-pulse"></span> Connected
                 </p>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 custom-scrollbar">
-              <div className="flex flex-col gap-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50 custom-scrollbar">
+              <div className="flex flex-col gap-4 max-w-3xl mx-auto w-full">
                 {messages.length === 0 ? (
-                  <div className="text-center text-gray-400 mt-10">
+                  <div className="text-center text-slate-400 mt-10">
                     <p className="text-sm">No messages yet.</p>
                     <p className="text-xs mt-1">Send a message to start the conversation!</p>
                   </div>
@@ -194,12 +200,14 @@ export default function Chat() {
                     const isShelter = msg.sender === 'shelter';
                     return (
                       <div key={msg._id || index} className={`flex flex-col max-w-[75%] ${isShelter ? 'self-end items-end' : 'self-start items-start'}`}>
-                        <div className={`px-4 py-2.5 rounded-2xl ${
-                          isShelter ? 'bg-emerald-600 text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
+                        <div className={`px-4 py-2.5 text-sm font-medium ${
+                          isShelter 
+                            ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-emerald-600/10' 
+                            : 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-sm shadow-sm'
                         }`}>
-                          <p className="text-sm">{msg.text}</p>
+                          {msg.text}
                         </div>
-                        <span className="text-[10px] text-gray-400 mt-1 px-1">{msg.time}</span>
+                        <span className="text-[10px] text-slate-400 mt-1 px-1">{msg.time}</span>
                       </div>
                     );
                   })
@@ -208,20 +216,20 @@ export default function Chat() {
               </div>
             </div>
 
-            <div className="p-4 bg-white border-t border-gray-100 flex-shrink-0">
-              <div className="flex items-center gap-2">
+            <div className="p-4 sm:p-5 bg-white border-t border-slate-200 shrink-0">
+              <div className="flex items-center gap-3 max-w-3xl mx-auto w-full">
                 <input 
                   type="text" 
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type a response to the user..." 
-                  className="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm transition-all"
+                  value={inputText} 
+                  onChange={(e) => setInputText(e.target.value)} 
+                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()} 
+                  placeholder="Type your message..." 
+                  className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium transition-all shadow-inner" 
                 />
                 <button 
-                  onClick={sendMessage}
-                  disabled={!inputText.trim()}
-                  className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:hover:bg-emerald-600 shadow-sm"
+                  onClick={sendMessage} 
+                  disabled={!inputText.trim()} 
+                  className="w-12 h-12 shrink-0 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-md"
                 >
                   <Send size={18} className="ml-1" />
                 </button>
@@ -229,12 +237,12 @@ export default function Chat() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50/30">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <UserIcon size={40} className="text-gray-300" />
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50">
+            <div className="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center mb-4 shadow-inner">
+              <UserIcon size={40} className="text-slate-400" />
             </div>
-            <p className="text-lg font-bold text-gray-600">Select a conversation</p>
-            <p className="text-sm mt-1 text-gray-500">Choose a user from the sidebar to start chatting.</p>
+            <p className="text-lg font-bold text-slate-600">Select a conversation</p>
+            <p className="text-sm mt-1 text-slate-500">Choose a user from the sidebar to start chatting.</p>
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload } from 'lucide-react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 interface AddPetModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export default function AddPetModal({ isOpen, onClose, onSuccess }: AddPetModalP
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const { addToast } = useToast();
 
   if (!isOpen) return null;
 
@@ -33,11 +35,12 @@ export default function AddPetModal({ isOpen, onClose, onSuccess }: AddPetModalP
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
+      addToast('success', 'Pet added successfully!');
       onSuccess(); 
       onClose();   
     } catch (error) {
       console.error("Failed to add pet", error);
-      alert("Failed to add pet. Please check the form and your connection.");
+      addToast('error', 'Failed to add pet. Please check the form and your connection.');
     } finally {
       setLoading(false);
     }

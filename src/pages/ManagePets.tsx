@@ -3,6 +3,8 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import AddPetModal from '../components/pets/AddPetModal';
 import EditPetModal from '../components/pets/EditPetModal';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { useToast } from '../context/ToastContext';
 
 interface Pet {
   _id: string;
@@ -20,6 +22,9 @@ export default function ManagePets() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPet, setSelectedPet] = useState<any>(null);
+  
+  const { addToast } = useToast();
+  const [confirmDelete, setConfirmDelete] = useState<{isOpen: boolean, id: string, name: string}>({ isOpen: false, id: '', name: '' });
 
   const fetchPets = async () => {
     setLoading(true);
@@ -43,16 +48,21 @@ export default function ManagePets() {
     pet.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = async (petId: string, petName: string) => {
-    if (window.confirm(`Are you sure you want to remove ${petName} from the shelter?`)) {
-      try {
-        await api.delete(`/pets/${petId}`); 
-        fetchPets(); 
-      } catch (error) {
-        console.error("Failed to delete pet:", error);
-        alert("Could not delete the pet. Check the console.");
-      }
+  const executeDelete = async () => {
+    try {
+      await api.delete(`/pets/${confirmDelete.id}`); 
+      addToast('success', `${confirmDelete.name} was removed from the shelter.`);
+      fetchPets(); 
+    } catch (error) {
+      console.error("Failed to delete pet:", error);
+      addToast('error', 'Could not delete the pet. Please try again.');
+    } finally {
+      setConfirmDelete({ isOpen: false, id: '', name: '' });
     }
+  };
+
+  const handleDeleteClick = (petId: string, petName: string) => {
+    setConfirmDelete({ isOpen: true, id: petId, name: petName });
   };
 
   return (
@@ -121,7 +131,7 @@ export default function ManagePets() {
                   </button>
 
                   <button 
-                    onClick={() => handleDelete(pet._id, pet.name)} 
+                    onClick={() => handleDeleteClick(pet._id, pet.name)} 
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete Pet"
                   >
@@ -146,6 +156,16 @@ export default function ManagePets() {
         onClose={() => setIsEditModalOpen(false)}
         onSuccess={fetchPets}
         pet={selectedPet}
+      />
+
+      <ConfirmModal 
+        isOpen={confirmDelete.isOpen}
+        title="Delete Pet"
+        message={`Are you sure you want to remove ${confirmDelete.name} from the shelter? This action cannot be undone.`}
+        confirmText="Delete Pet"
+        isDestructive={true}
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: '', name: '' })}
       />
     </div>
   );
