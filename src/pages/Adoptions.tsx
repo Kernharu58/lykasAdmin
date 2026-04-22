@@ -1,23 +1,56 @@
-import React, { useState, useEffect } from 'react';
-// 👉 NEW: Imported useNavigate
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// 👉 NEW: Imported MessageSquare
-import { CheckCircle, XCircle, User as UserIcon, Mail, MessageSquare } from 'lucide-react';
+import { CheckCircle, Mail, MessageSquare, User as UserIcon, XCircle } from 'lucide-react';
 import api from '../services/api';
+import ConfirmModal from '../components/ui/ConfirmModal';
+import { EmptyState, ErrorState, LoadingState } from '../components/ui/StateDisplays';
+import { Card, PageHeader, SectionHeader } from '../components/ui/SharedUI';
+import { useToast } from '../context/ToastContext';
+
+interface AdoptionRequest {
+  _id: string;
+  name: string;
+  breed: string;
+  age: number | string;
+  imageUrl?: string;
+  owner?: {
+    _id?: string;
+    displayName?: string;
+    email?: string;
+    profilePicture?: string;
+  } | null;
+}
 
 export default function Adoptions() {
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<AdoptionRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // 👉 NEW: Initialize navigate
+  const [error, setError] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    isOpen: boolean;
+    type: 'approve' | 'reject' | '';
+    petId: string;
+    petName: string;
+    userName: string;
+  }>({
+    isOpen: false,
+    type: '',
+    petId: '',
+    petName: '',
+    userName: '',
+  });
+
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const fetchApplications = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await api.get('/pets/pending-adoptions');
       setApplications(response.data);
-    } catch (error) {
-      console.error("Error fetching adoptions:", error);
+    } catch (fetchError) {
+      console.error('Error fetching adoptions:', fetchError);
+      setError('Unable to load adoption applications right now. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -27,119 +60,152 @@ export default function Adoptions() {
     fetchApplications();
   }, []);
 
-  const handleApprove = async (petId: string, petName: string, userName: string) => {
-    if (window.confirm(`Are you sure you want to approve ${userName} to adopt ${petName}?`)) {
-      try {
-        await api.put(`/pets/${petId}`, { status: 'Adopted' });
-        fetchApplications(); 
-      } catch (error) {
-        console.error("Error approving adoption:", error);
-        alert("Failed to approve adoption.");
+  const executeAction = async () => {
+    try {
+      if (confirmAction.type === 'approve') {
+        await api.put(`/pets/${confirmAction.petId}`, { status: 'Adopted' });
+        addToast('success', `${confirmAction.userName || 'The applicant'} was approved for ${confirmAction.petName}.`);
+      } else if (confirmAction.type === 'reject') {
+        await api.put(`/pets/${confirmAction.petId}`, { status: 'Available', owner: null });
+        addToast('warning', `${confirmAction.petName} is available for adoption again.`);
       }
-    }
-  };
 
-  const handleReject = async (petId: string) => {
-    if (window.confirm("Are you sure you want to reject this application? The pet will become available again.")) {
-      try {
-        await api.put(`/pets/${petId}`, { status: 'Available', owner: null });
-        fetchApplications(); 
-      } catch (error) {
-        console.error("Error rejecting adoption:", error);
-        alert("Failed to reject adoption.");
-      }
+      fetchApplications();
+    } catch (actionError) {
+      console.error(`Error trying to ${confirmAction.type} adoption:`, actionError);
+      addToast('error', `Failed to ${confirmAction.type || 'update'} the adoption request.`);
+    } finally {
+      setConfirmAction({ isOpen: false, type: '', petId: '', petName: '', userName: '' });
     }
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto w-full">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Adoption Applications</h1>
-        <p className="text-gray-500 mt-1">Review, approve, or reject pending adoption requests.</p>
-      </div>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+      <PageHeader
+        title="Adoption Applications"
+        description="Review pending requests, coordinate with applicants, and make safe adoption decisions."
+      />
 
-      {loading ? (
-        <div className="p-8 text-gray-500">Loading applications...</div>
-      ) : applications.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <p className="text-gray-500 text-lg">No pending adoption applications right now.</p>
+      <Card noPadding>
+        <div className="p-5 border-b border-slate-100 bg-slate-50/60">
+          <SectionHeader
+            title="Pending Applications"
+            description="Each request shows the applicant and pet pairing so staff can act with context."
+          />
         </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {applications.map((pet) => (
-            <div key={pet._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-              <div className="flex flex-col md:flex-row p-5 gap-6 border-b border-gray-50 flex-1">
-                
-                {/* Adopter Info Column */}
-                <div className="flex-1 border-b md:border-b-0 md:border-r border-gray-100 pb-4 md:pb-0 md:pr-6">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Applicant Details</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200 flex-shrink-0">
-                      {pet.owner?.profilePicture ? (
-                        <img src={pet.owner.profilePicture} alt="Adopter" className="w-full h-full object-cover" />
-                      ) : (
-                        pet.owner?.displayName ? pet.owner.displayName.charAt(0).toUpperCase() : <UserIcon size={24} />
+
+        <div className="p-5 sm:p-6">
+          {error ? (
+            <ErrorState message={error} onRetry={fetchApplications} />
+          ) : loading ? (
+            <LoadingState message="Loading adoption applications..." />
+          ) : applications.length === 0 ? (
+            <EmptyState
+              title="No pending applications"
+              message="New adoption requests will appear here when users apply through the mobile app."
+            />
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {applications.map((pet) => (
+                <div key={pet._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                  <div className="flex flex-col md:flex-row p-5 gap-6 border-b border-slate-100 flex-1">
+                    <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-100 pb-4 md:pb-0 md:pr-6">
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Applicant Details</h3>
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200 flex-shrink-0">
+                          {pet.owner?.profilePicture ? (
+                            <img src={pet.owner.profilePicture} alt="Adopter" className="w-full h-full object-cover" />
+                          ) : (
+                            pet.owner?.displayName ? pet.owner.displayName.charAt(0).toUpperCase() : <UserIcon size={24} />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-lg">{pet.owner?.displayName || 'Unknown User'}</h4>
+                          <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+                            <Mail size={14} /> {pet.owner?.email || 'No email'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {pet.owner?._id && (
+                        <button
+                          onClick={() => navigate('/chat', { state: { selectedUserId: pet.owner?._id } })}
+                          className="mt-5 flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-50 text-emerald-700 font-medium rounded-xl hover:bg-emerald-100 transition-colors"
+                        >
+                          <MessageSquare size={18} />
+                          Message Applicant
+                        </button>
                       )}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800 text-lg">{pet.owner?.displayName || "Unknown User"}</h4>
-                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                        <Mail size={14} /> {pet.owner?.email || "No email"}
-                      </p>
+
+                    <div className="flex-1">
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Pet Requested</h3>
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0">
+                          {pet.imageUrl ? (
+                            <img src={pet.imageUrl} alt={pet.name} className="w-full h-full object-cover" />
+                          ) : null}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-800 text-lg">{pet.name}</h4>
+                          <p className="text-sm text-slate-500 mt-1">{pet.breed} • {pet.age} Years</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* 👉 NEW: Navigation Button to jump to Chat */}
-                  {pet.owner?._id && (
-                    <button 
-                      onClick={() => navigate('/chat', { state: { selectedUserId: pet.owner._id } })}
-                      className="mt-5 flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-50 text-emerald-700 font-medium rounded-xl hover:bg-emerald-100 transition-colors"
+
+                  <div className="p-4 bg-slate-50/60 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                    <button
+                      onClick={() =>
+                        setConfirmAction({
+                          isOpen: true,
+                          type: 'reject',
+                          petId: pet._id,
+                          petName: pet.name,
+                          userName: pet.owner?.displayName || 'the applicant',
+                        })
+                      }
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-600 font-medium rounded-xl hover:bg-rose-50 hover:border-rose-100 transition-colors shadow-sm"
                     >
-                      <MessageSquare size={18} />
-                      Message Applicant
+                      <XCircle size={18} />
+                      Reject
                     </button>
-                  )}
-                </div>
-
-                {/* Pet Info Column */}
-                <div className="flex-1">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Pet Requested</h3>
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                      {pet.imageUrl ? (
-                        <img src={pet.imageUrl} alt={pet.name} className="w-full h-full object-cover" />
-                      ) : null}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800 text-lg">{pet.name}</h4>
-                      <p className="text-sm text-gray-500 mt-1">{pet.breed} • {pet.age} Years</p>
-                    </div>
+                    <button
+                      onClick={() =>
+                        setConfirmAction({
+                          isOpen: true,
+                          type: 'approve',
+                          petId: pet._id,
+                          petName: pet.name,
+                          userName: pet.owner?.displayName || 'the applicant',
+                        })
+                      }
+                      className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
+                    >
+                      <CheckCircle size={18} />
+                      Approve Application
+                    </button>
                   </div>
                 </div>
-
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-4 bg-gray-50/50 flex items-center justify-end gap-3">
-                <button 
-                  onClick={() => handleReject(pet._id)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-red-600 font-medium rounded-xl hover:bg-red-50 hover:border-red-100 transition-colors shadow-sm"
-                >
-                  <XCircle size={18} />
-                  Reject
-                </button>
-                <button 
-                  onClick={() => handleApprove(pet._id, pet.name, pet.owner?.displayName)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
-                >
-                  <CheckCircle size={18} />
-                  Approve Application
-                </button>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
+      </Card>
+
+      <ConfirmModal
+        isOpen={confirmAction.isOpen}
+        title={confirmAction.type === 'approve' ? 'Approve Adoption' : 'Reject Adoption'}
+        message={
+          confirmAction.type === 'approve'
+            ? `Approve ${confirmAction.userName} to adopt ${confirmAction.petName}? This will mark the pet as adopted.`
+            : `Reject the request for ${confirmAction.petName}? The pet will become available for adoption again.`
+        }
+        confirmText={confirmAction.type === 'approve' ? 'Approve Request' : 'Reject Request'}
+        isDestructive={confirmAction.type !== 'approve'}
+        onConfirm={executeAction}
+        onCancel={() => setConfirmAction({ isOpen: false, type: '', petId: '', petName: '', userName: '' })}
+      />
     </div>
   );
 }

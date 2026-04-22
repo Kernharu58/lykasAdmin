@@ -87,6 +87,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  useEffect(() => {
+    const handleUnauthorized = () => logout();
+    window.addEventListener('admin:unauthorized', handleUnauthorized);
+
+    return () => {
+      window.removeEventListener('admin:unauthorized', handleUnauthorized);
+    };
+  }, [originalToken]);
+
   return (
     <AuthContext.Provider value={{ 
       user, token, isLoading, login, logout, 

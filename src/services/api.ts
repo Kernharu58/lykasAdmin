@@ -25,8 +25,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('adminToken');
-      window.location.href = '/login'; // Force redirect to login
+      window.dispatchEvent(new CustomEvent('admin:unauthorized'));
     }
     return Promise.reject(error);
   }

@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles = ['admin', 'staff'] }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -24,13 +24,12 @@ export default function ProtectedRoute({ children, allowedRoles = ['admin', 'sta
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    // If they logged in but are just a normal 'user', boot them out of admin
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-gray-50 p-6 text-center">
         <h1 className="text-3xl font-bold text-red-600 mb-2">Access Denied</h1>
         <p className="text-gray-600 mb-4">You do not have administrative privileges to view this portal.</p>
         <button 
-          onClick={() => { localStorage.removeItem('adminToken'); window.location.href = '/login'; }}
+          onClick={logout}
           className="px-4 py-2 bg-[#1B2A49] text-white rounded-xl"
         >
           Sign out and try another account

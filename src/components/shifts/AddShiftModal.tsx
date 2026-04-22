@@ -1,6 +1,18 @@
-import React, { useState } from 'react';
-import { X, Calendar as CalendarIcon, Clock, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Users } from 'lucide-react';
+import { useState } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
+import {
+  FieldGrid,
+  FormActions,
+  FormField,
+  FormSection,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalShell,
+  TextInput,
+} from '../ui/FormUI';
 
 interface AddShiftModalProps {
   isOpen: boolean;
@@ -13,9 +25,10 @@ export default function AddShiftModal({ isOpen, onClose, onSuccess }: AddShiftMo
     title: '',
     date: '',
     durationHours: '',
-    capacity: ''
+    capacity: '',
   });
   const [loading, setLoading] = useState(false);
+  const { addToast } = useToast();
 
   if (!isOpen) return null;
 
@@ -26,95 +39,91 @@ export default function AddShiftModal({ isOpen, onClose, onSuccess }: AddShiftMo
       await api.post('/appointments', {
         ...formData,
         durationHours: Number(formData.durationHours),
-        capacity: Number(formData.capacity)
+        capacity: Number(formData.capacity),
       });
+      addToast('success', 'Shift created successfully.');
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to create shift", error);
-      alert("Failed to create shift. Please check your connection.");
+      console.error('Failed to create shift', error);
+      addToast('error', 'Failed to create shift. Please check your connection.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
-        <div className="flex justify-between items-center p-5 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800">Create Volunteer Shift</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X size={24} />
-          </button>
-        </div>
+    <ModalShell maxWidth="max-w-xl">
+      <ModalHeader
+        title="Create Volunteer Shift"
+        subtitle="Define the shift details so volunteers know when and how they can help."
+        onClose={onClose}
+      />
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Shift Title</label>
-            <input 
-              required
-              type="text" 
-              placeholder="e.g., Morning Dog Walking"
-              className="w-full p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
-            <div className="relative">
-              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input 
+      <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+        <ModalBody>
+          <FormSection title="Shift Details">
+            <FormField label="Shift Title" required hint="Use a short, recognizable activity name.">
+              <TextInput
                 required
-                type="datetime-local" 
-                className="w-full pl-10 p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                onChange={(e) => setFormData({...formData, date: e.target.value})}
+                type="text"
+                placeholder="e.g., Morning Dog Walking"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
-            </div>
-          </div>
+            </FormField>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Duration (Hours)</label>
+            <FormField label="Date & Time" required>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input 
+                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <TextInput
                   required
-                  type="number" 
-                  min="1"
-                  placeholder="e.g., 2"
-                  className="w-full pl-10 p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                  onChange={(e) => setFormData({...formData, durationHours: e.target.value})}
+                  type="datetime-local"
+                  className="pl-10"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
-            </div>
+            </FormField>
 
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input 
-                  required
-                  type="number" 
-                  min="1"
-                  placeholder="Max volunteers"
-                  className="w-full pl-10 p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
-                  onChange={(e) => setFormData({...formData, capacity: e.target.value})}
-                />
-              </div>
-            </div>
-          </div>
+            <FieldGrid>
+              <FormField label="Duration (Hours)" required>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <TextInput
+                    required
+                    type="number"
+                    min="1"
+                    className="pl-10"
+                    placeholder="e.g., 2"
+                    value={formData.durationHours}
+                    onChange={(e) => setFormData({ ...formData, durationHours: e.target.value })}
+                  />
+                </div>
+              </FormField>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-50 rounded-xl">
-              Cancel
-            </button>
-            <button type="submit" disabled={loading} className="px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 disabled:opacity-50">
-              {loading ? 'Creating...' : 'Create Shift'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <FormField label="Capacity" required hint="Maximum number of volunteers for this shift.">
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <TextInput
+                    required
+                    type="number"
+                    min="1"
+                    className="pl-10"
+                    placeholder="Max volunteers"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                  />
+                </div>
+              </FormField>
+            </FieldGrid>
+          </FormSection>
+        </ModalBody>
+
+        <ModalFooter>
+          <FormActions onCancel={onClose} submitLabel="Create Shift" loadingLabel="Creating..." loading={loading} />
+        </ModalFooter>
+      </form>
+    </ModalShell>
   );
 }

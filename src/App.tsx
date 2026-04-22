@@ -15,12 +15,13 @@ import Settings from './pages/Settings';
 import Donations from './pages/Donations';
 import Adoptions from './pages/Adoptions';
 import Accounts from './pages/Accounts';
+import AuditLogs from './pages/AuditLogs';
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
+    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden ml-10">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col lg:ml-64 w-full min-w-0 transition-all duration-300">
@@ -45,6 +46,12 @@ function AdminLayout() {
             <Route path="/accounts" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <Accounts />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/audit-logs" element={
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <AuditLogs />
               </ProtectedRoute>
             } />
             

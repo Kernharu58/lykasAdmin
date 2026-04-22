@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, HeartHandshake, TrendingUp, Download, Search, Filter } from 'lucide-react';
 import api from '../services/api';
 import { ErrorState, LoadingState, EmptyState } from '../components/ui/StateDisplays';

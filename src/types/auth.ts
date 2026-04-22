@@ -3,8 +3,9 @@ export interface User {
   _id?: string;
   displayName: string;
   email: string;
-  role: 'admin' | 'staff' | 'user';
+  role: 'super_admin' | 'admin' | 'staff' | 'user';
   profilePicture?: string;
+  status?: 'active' | 'suspended' | 'locked';
 }
 
 export interface AuthResponse {

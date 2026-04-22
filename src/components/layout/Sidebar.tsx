@@ -41,7 +41,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {isOpen && <div className="fixed inset-0 bg-slate-900/60 z-40 lg:hidden backdrop-blur-sm transition-opacity" onClick={onClose} />}
 
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl lg:shadow-none border-r border-slate-800`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-slate-300 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} shadow-2xl lg:shadow-none border-r border-slate-800 ` }>
         
         <div className="p-6 flex items-center justify-between border-b border-slate-800 shrink-0 bg-slate-950/50">
           <div className="flex items-center gap-3">
