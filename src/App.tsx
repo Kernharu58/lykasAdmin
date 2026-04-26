@@ -21,7 +21,7 @@ function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden ml-10">
+    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden ml-7">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       <div className="flex-1 flex flex-col lg:ml-64 w-full min-w-0 transition-all duration-300">
