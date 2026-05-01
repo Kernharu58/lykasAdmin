@@ -127,11 +127,13 @@ export default function Chat() {
   const sendMessage = async () => {
     if (!inputText.trim() || !selectedUser || !socketRef.current) return;
 
+    // Only send userId + text — the server derives sender from the JWT (shelter/admin).
+    // Do NOT optimistically push to messages here; the server echoes receiveMessage
+    // back to admin_room so the socket handler below adds it — one source of truth,
+    // no duplicates and always the correct sender value from the DB.
     const messageData = {
       userId: selectedUser._id,
       text: inputText.trim(),
-      sender: 'shelter',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     try {
