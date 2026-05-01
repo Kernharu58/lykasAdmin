@@ -9,15 +9,22 @@ import { useToast } from '../context/ToastContext';
 
 interface AdoptionRequest {
   _id: string;
-  name: string;
-  breed: string;
-  age: number | string;
-  imageUrl?: string;
-  owner?: {
+  phone: string;
+  address: string;
+  experience: string;
+  status: 'pending' | 'approved' | 'rejected';
+  applicant?: {
     _id?: string;
     displayName?: string;
     email?: string;
     profilePicture?: string;
+  } | null;
+  pet?: {
+    _id?: string;
+    name?: string;
+    breed?: string;
+    age?: number | string;
+    imageUrl?: string;
   } | null;
 }
 
@@ -28,19 +35,23 @@ export default function Adoptions() {
   const [confirmAction, setConfirmAction] = useState<{
     isOpen: boolean;
     type: 'approve' | 'reject' | '';
-    petId: string;
+    applicationId: string;
     petName: string;
     userName: string;
   }>({
     isOpen: false,
     type: '',
-    petId: '',
+    applicationId: '',
     petName: '',
     userName: '',
   });
 
   const navigate = useNavigate();
   const { addToast } = useToast();
+
+  const resetConfirmAction = () => {
+    setConfirmAction({ isOpen: false, type: '', applicationId: '', petName: '', userName: '' });
+  };
 
   const fetchApplications = async () => {
     try {
@@ -63,10 +74,10 @@ export default function Adoptions() {
   const executeAction = async () => {
     try {
       if (confirmAction.type === 'approve') {
-        await api.put(`/pets/${confirmAction.petId}`, { status: 'Adopted' });
+        await api.put(`/pets/applications/${confirmAction.applicationId}/status`, { status: 'approved' });
         addToast('success', `${confirmAction.userName || 'The applicant'} was approved for ${confirmAction.petName}.`);
       } else if (confirmAction.type === 'reject') {
-        await api.put(`/pets/${confirmAction.petId}`, { status: 'Available', owner: null });
+        await api.put(`/pets/applications/${confirmAction.applicationId}/status`, { status: 'rejected' });
         addToast('warning', `${confirmAction.petName} is available for adoption again.`);
       }
 
@@ -75,7 +86,7 @@ export default function Adoptions() {
       console.error(`Error trying to ${confirmAction.type} adoption:`, actionError);
       addToast('error', `Failed to ${confirmAction.type || 'update'} the adoption request.`);
     } finally {
-      setConfirmAction({ isOpen: false, type: '', petId: '', petName: '', userName: '' });
+      resetConfirmAction();
     }
   };
 
@@ -90,7 +101,7 @@ export default function Adoptions() {
         <div className="p-5 border-b border-slate-100 bg-slate-50/60">
           <SectionHeader
             title="Pending Applications"
-            description="Each request shows the applicant and pet pairing so staff can act with context."
+            description="Each request shows the applicant, pet, and submitted answers in one review surface."
           />
         </div>
 
@@ -106,30 +117,36 @@ export default function Adoptions() {
             />
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {applications.map((pet) => (
-                <div key={pet._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              {applications.map((application) => (
+                <div key={application._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                   <div className="flex flex-col md:flex-row p-5 gap-6 border-b border-slate-100 flex-1">
                     <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-100 pb-4 md:pb-0 md:pr-6">
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Applicant Details</h3>
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold overflow-hidden border border-emerald-200 flex-shrink-0">
-                          {pet.owner?.profilePicture ? (
-                            <img src={pet.owner.profilePicture} alt="Adopter" className="w-full h-full object-cover" />
+                          {application.applicant?.profilePicture ? (
+                            <img src={application.applicant.profilePicture} alt="Adopter" className="w-full h-full object-cover" />
                           ) : (
-                            pet.owner?.displayName ? pet.owner.displayName.charAt(0).toUpperCase() : <UserIcon size={24} />
+                            application.applicant?.displayName ? application.applicant.displayName.charAt(0).toUpperCase() : <UserIcon size={24} />
                           )}
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-800 text-lg">{pet.owner?.displayName || 'Unknown User'}</h4>
+                          <h4 className="font-bold text-slate-800 text-lg">{application.applicant?.displayName || 'Unknown User'}</h4>
                           <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                            <Mail size={14} /> {pet.owner?.email || 'No email'}
+                            <Mail size={14} /> {application.applicant?.email || 'No email'}
                           </p>
                         </div>
                       </div>
 
-                      {pet.owner?._id && (
+                      <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+                        <p><span className="font-bold text-slate-700">Phone:</span> {application.phone}</p>
+                        <p><span className="font-bold text-slate-700">Address:</span> {application.address}</p>
+                        <p><span className="font-bold text-slate-700">Experience:</span> {application.experience}</p>
+                      </div>
+
+                      {application.applicant?._id && (
                         <button
-                          onClick={() => navigate('/chat', { state: { selectedUserId: pet.owner?._id } })}
+                          onClick={() => navigate('/chat', { state: { selectedUserId: application.applicant?._id } })}
                           className="mt-5 flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-50 text-emerald-700 font-medium rounded-xl hover:bg-emerald-100 transition-colors"
                         >
                           <MessageSquare size={18} />
@@ -142,13 +159,15 @@ export default function Adoptions() {
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Pet Requested</h3>
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0">
-                          {pet.imageUrl ? (
-                            <img src={pet.imageUrl} alt={pet.name} className="w-full h-full object-cover" />
+                          {application.pet?.imageUrl ? (
+                            <img src={application.pet.imageUrl} alt={application.pet.name} className="w-full h-full object-cover" />
                           ) : null}
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-800 text-lg">{pet.name}</h4>
-                          <p className="text-sm text-slate-500 mt-1">{pet.breed} • {pet.age} Years</p>
+                          <h4 className="font-bold text-slate-800 text-lg">{application.pet?.name || 'Unknown Pet'}</h4>
+                          <p className="text-sm text-slate-500 mt-1">
+                            {application.pet?.breed || 'Unknown breed'} - {application.pet?.age || '?'} Years
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -160,9 +179,9 @@ export default function Adoptions() {
                         setConfirmAction({
                           isOpen: true,
                           type: 'reject',
-                          petId: pet._id,
-                          petName: pet.name,
-                          userName: pet.owner?.displayName || 'the applicant',
+                          applicationId: application._id,
+                          petName: application.pet?.name || 'this pet',
+                          userName: application.applicant?.displayName || 'the applicant',
                         })
                       }
                       className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-600 font-medium rounded-xl hover:bg-rose-50 hover:border-rose-100 transition-colors shadow-sm"
@@ -175,9 +194,9 @@ export default function Adoptions() {
                         setConfirmAction({
                           isOpen: true,
                           type: 'approve',
-                          petId: pet._id,
-                          petName: pet.name,
-                          userName: pet.owner?.displayName || 'the applicant',
+                          applicationId: application._id,
+                          petName: application.pet?.name || 'this pet',
+                          userName: application.applicant?.displayName || 'the applicant',
                         })
                       }
                       className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
@@ -198,13 +217,13 @@ export default function Adoptions() {
         title={confirmAction.type === 'approve' ? 'Approve Adoption' : 'Reject Adoption'}
         message={
           confirmAction.type === 'approve'
-            ? `Approve ${confirmAction.userName} to adopt ${confirmAction.petName}? This will mark the pet as adopted.`
-            : `Reject the request for ${confirmAction.petName}? The pet will become available for adoption again.`
+            ? `Approve ${confirmAction.userName} to adopt ${confirmAction.petName}? This will mark the application as approved and the pet as adopted.`
+            : `Reject the request for ${confirmAction.petName}? The application will be marked rejected.`
         }
         confirmText={confirmAction.type === 'approve' ? 'Approve Request' : 'Reject Request'}
         isDestructive={confirmAction.type !== 'approve'}
         onConfirm={executeAction}
-        onCancel={() => setConfirmAction({ isOpen: false, type: '', petId: '', petName: '', userName: '' })}
+        onCancel={resetConfirmAction}
       />
     </div>
   );

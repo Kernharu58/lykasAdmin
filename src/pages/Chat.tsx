@@ -81,7 +81,11 @@ export default function Chat() {
 
     initChat();
 
-    socketRef.current = io(SOCKET_URL);
+    socketRef.current = io(SOCKET_URL, {
+      auth: {
+        token: localStorage.getItem('adminToken'),
+      },
+    });
 
     socketRef.current.on('connect', () => {
       socketRef.current?.emit('joinAdmin');

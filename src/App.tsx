@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -44,7 +45,7 @@ function AdminLayout() {
             
             {/* STRICT ADMIN-ONLY ROUTE */}
             <Route path="/accounts" element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <Accounts />
               </ProtectedRoute>
             } />
@@ -70,19 +71,21 @@ export default function App() {
     <GoogleOAuthProvider clientId={googleClientId}>
       <AuthProvider>
         <ToastProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route 
-                path="/*" 
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                    <AdminLayout />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </Router>
+          <ErrorBoundary>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route 
+                  path="/*" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
+                      <AdminLayout />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </Router>
+          </ErrorBoundary>
         </ToastProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
