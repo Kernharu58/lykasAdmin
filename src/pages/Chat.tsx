@@ -105,8 +105,16 @@ export default function Chat() {
     socketRef.current.on('receiveMessage', (newMessage) => {
       fetchSessions();
 
-      if (selectedUserRef.current && newMessage.userId === selectedUserRef.current._id) {
-        setMessages((prev) => [...prev, newMessage]);
+      // Compare as strings — newMessage.userId is ObjectId from MongoDB
+      const incomingUserId = newMessage.userId?.toString() ?? newMessage.userId;
+      const selectedId = selectedUserRef.current?._id?.toString() ?? selectedUserRef.current?._id;
+
+      if (selectedUserRef.current && incomingUserId === selectedId) {
+        setMessages((prev) => {
+          // Deduplicate: skip if message with same _id already exists
+          if (newMessage._id && prev.some((m) => m._id === newMessage._id)) return prev;
+          return [...prev, newMessage];
+        });
       }
     });
 
