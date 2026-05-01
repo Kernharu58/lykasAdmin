@@ -7,6 +7,12 @@ import { useToast } from '../context/ToastContext';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/StateDisplays';
 
 const SOCKET_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
+const isShelterMessage = (sender?: string) => sender === 'shelter' || sender === 'admin';
+const formatMessageTime = (message: any) =>
+  message.time ||
+  (message.createdAt
+    ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '');
 
 export default function Chat() {
   const location = useLocation();
@@ -246,7 +252,7 @@ export default function Chat() {
                   />
                 ) : (
                   messages.map((msg, index) => {
-                    const isShelter = msg.sender === 'shelter';
+                    const isShelter = isShelterMessage(msg.sender);
                     return (
                       <div key={msg._id || index} className={`flex flex-col max-w-[75%] ${isShelter ? 'self-end items-end' : 'self-start items-start'}`}>
                         <div
@@ -258,7 +264,7 @@ export default function Chat() {
                         >
                           {msg.text}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1 px-1">{msg.time}</span>
+                        <span className="text-[10px] text-slate-400 mt-1 px-1">{formatMessageTime(msg)}</span>
                       </div>
                     );
                   })
