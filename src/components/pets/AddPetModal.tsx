@@ -30,8 +30,10 @@ export default function AddPetModal({ isOpen, onClose, onSuccess }: AddPetModalP
     age: '',
     gender: 'Male',
     size: 'Medium',
+    weight:'',
     status: 'Available',
     description: '',
+    healthStatus: '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -133,6 +135,17 @@ export default function AddPetModal({ isOpen, onClose, onSuccess }: AddPetModalP
                 />
               </FormField>
 
+            <FormField label="Weight (kg)" hint="e.g., 25.5">
+            <TextInput
+              type="number"
+              step="0.1"
+             min="0"
+             placeholder="Enter weight in kilograms"
+             value={formData.weight}
+             onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+             />
+            </FormField>
+
               <FormField label="Gender">
                 <SelectInput
                   value={formData.gender}
@@ -166,6 +179,15 @@ export default function AddPetModal({ isOpen, onClose, onSuccess }: AddPetModalP
                 <option value="Pending">Adoption Pending</option>
                 <option value="Adopted">Adopted</option>
               </SelectInput>
+            </FormField>
+
+            <FormField label="Health Status">
+              <TextInput
+                type="text"
+                placeholder="e.g., Healthy, Needs medication, Post-surgery recovery"
+                value={formData.healthStatus}
+                onChange={(e) => setFormData({ ...formData, healthStatus: e.target.value })}
+              />
             </FormField>
 
             <FormField

@@ -31,6 +31,7 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
     age: '',
     gender: '',
     size: '',
+    weight:'',
     status: '',
     description: '',
     healthStatus: '',
@@ -49,6 +50,7 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
       age: pet.age?.toString() || '',
       gender: pet.gender || 'Male',
       size: pet.size || 'Medium',
+      weight: pet.weight?.toString() || '',
       status: pet.status || 'Available',
       description: pet.description || '',
       healthStatus: pet.healthStatus || 'See description for medical notes',
@@ -161,6 +163,17 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
                   step="0.1"
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                />
+              </FormField>
+
+              <FormField label="Weight (kg)" hint="e.g., 25.5">
+                <TextInput
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="Enter weight in kilograms"
+                  value={formData.weight}
+                  onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
                 />
               </FormField>
 
