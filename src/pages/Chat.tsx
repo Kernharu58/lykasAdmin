@@ -6,12 +6,13 @@ import api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/StateDisplays';
 
-
 const SOCKET_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
 
-// A message is from the shelter/admin if sender is 'shelter' or 'admin'
-// A message is from the user if sender is 'user' (or anything else)
-const isShelterMessage = (sender?: string) => sender === 'shelter' || sender === 'admin';
+// FIX: Made the check case-insensitive to ensure it catches "Admin", "admin", "Shelter", etc.
+const isShelterMessage = (sender?: string) => {
+  const senderStr = String(sender || '').toLowerCase();
+  return senderStr === 'shelter' || senderStr === 'admin';
+};
 
 const formatMessageTime = (message: any) =>
   message.time ||
@@ -135,13 +136,11 @@ export default function Chat() {
   const sendMessage = async () => {
     if (!inputText.trim() || !selectedUser || !socketRef.current) return;
 
-    // Only send userId + text — the server derives sender from the JWT (shelter/admin).
-    // Do NOT optimistically push to messages here; the server echoes receiveMessage
-    // back to admin_room so the socket handler below adds it — one source of truth,
-    // no duplicates and always the correct sender value from the DB.
+    // FIX: Added sender property so the database knows who sent it
     const messageData = {
       userId: selectedUser._id,
       text: inputText.trim(),
+      sender: 'admin' 
     };
 
     try {
@@ -267,16 +266,12 @@ export default function Chat() {
                   />
                 ) : (
                   messages.map((msg, index) => {
-                    // In admin view:
-                    // - shelter/admin messages → RIGHT (green, sent by us)
-                    // - user messages → LEFT (white, received from user)
                     const isShelter = isShelterMessage(msg.sender);
                     return (
                       <div
                         key={msg._id || index}
                         className={`flex items-end gap-2 w-full ${isShelter ? 'flex-row-reverse' : 'flex-row'}`}
                       >
-                        {/* User avatar — only shown for user (left) messages */}
                         {!isShelter && (
                           <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs overflow-hidden shrink-0 mb-5">
                             {selectedUser.profilePicture ? (
