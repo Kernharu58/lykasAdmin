@@ -6,8 +6,13 @@ import api from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/StateDisplays';
 
+
 const SOCKET_URL = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
+
+// A message is from the shelter/admin if sender is 'shelter' or 'admin'
+// A message is from the user if sender is 'user' (or anything else)
 const isShelterMessage = (sender?: string) => sender === 'shelter' || sender === 'admin';
+
 const formatMessageTime = (message: any) =>
   message.time ||
   (message.createdAt
@@ -252,19 +257,38 @@ export default function Chat() {
                   />
                 ) : (
                   messages.map((msg, index) => {
+                    // In admin view:
+                    // - shelter/admin messages → RIGHT (green, sent by us)
+                    // - user messages → LEFT (white, received from user)
                     const isShelter = isShelterMessage(msg.sender);
                     return (
-                      <div key={msg._id || index} className={`flex flex-col max-w-[75%] ${isShelter ? 'self-end items-end' : 'self-start items-start'}`}>
-                        <div
-                          className={`px-4 py-2.5 text-sm font-medium ${
-                            isShelter
-                              ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-emerald-600/10'
-                              : 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-sm shadow-sm'
-                          }`}
-                        >
-                          {msg.text}
+                      <div
+                        key={msg._id || index}
+                        className={`flex items-end gap-2 w-full ${isShelter ? 'flex-row-reverse' : 'flex-row'}`}
+                      >
+                        {/* User avatar — only shown for user (left) messages */}
+                        {!isShelter && (
+                          <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs overflow-hidden shrink-0 mb-5">
+                            {selectedUser.profilePicture ? (
+                              <img src={selectedUser.profilePicture} alt={selectedUser.displayName} className="w-full h-full object-cover" />
+                            ) : (
+                              selectedUser.displayName ? selectedUser.displayName.charAt(0).toUpperCase() : <UserIcon size={12} />
+                            )}
+                          </div>
+                        )}
+
+                        <div className={`flex flex-col max-w-[75%] ${isShelter ? 'items-end' : 'items-start'}`}>
+                          <div
+                            className={`px-4 py-2.5 text-sm font-medium ${
+                              isShelter
+                                ? 'bg-emerald-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-emerald-600/10'
+                                : 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-sm shadow-sm'
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                          <span className="text-[10px] text-slate-400 mt-1 px-1">{formatMessageTime(msg)}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1 px-1">{formatMessageTime(msg)}</span>
                       </div>
                     );
                   })
