@@ -33,6 +33,7 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
     size: '',
     status: '',
     description: '',
+    healthStatus: '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,7 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
       size: pet.size || 'Medium',
       status: pet.status || 'Available',
       description: pet.description || '',
+      healthStatus: pet.healthStatus || 'See description for medical notes',
     });
   }, [pet]);
 
@@ -199,6 +201,15 @@ export default function EditPetModal({ isOpen, onClose, onSuccess, pet }: EditPe
                 <option value="Pending">Adoption Pending</option>
                 <option value="Adopted">Adopted</option>
               </SelectInput>
+            </FormField>
+
+            <FormField label="Health Status">
+            <TextInput
+            type="text"
+            placeholder="e.g., Healthy, Needs medication, Post-surgery recovery"
+            value={formData.healthStatus}
+            onChange={(e) => setFormData({ ...formData, healthStatus: e.target.value })}
+            />
             </FormField>
 
             <FormField label="Description & Medical Notes">
