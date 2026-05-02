@@ -112,9 +112,10 @@ export default function Login() {
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
               <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-slate-500 font-medium text-xs uppercase tracking-wider">Or continue with</span></div>
             </div>
-
-            <div className="px-20 flex justify-center w-full [&>div]:w-full [&>div>div]:w-full">
+            <div className=" flex justify-center w-full">
+            <div className="mx-4 flex justify-center w-full [&>div]:w-full [&>div>div]:w-full">
               <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google authentication failed.")} theme="outline" size="large" width="100%" />
+            </div>
             </div>
           </form>
         </div>
