@@ -45,7 +45,6 @@ const roleOptions: { value: UserRole; label: string }[] = [
   { value: 'user', label: 'Mobile User' },
   { value: 'staff', label: 'Shelter Staff' },
   { value: 'admin', label: 'Admin' },
-  { value: 'super_admin', label: 'Super Admin' },
 ];
 
 function getStatusVariant(status: UserStatus | undefined) {
