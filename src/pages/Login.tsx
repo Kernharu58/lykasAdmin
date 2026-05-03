@@ -24,7 +24,16 @@ export default function Login() {
       const response = await api.post('/auth/login', { email, password });
       processSuccessfulLogin(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
+      const errorMsg = err.response?.data?.message;
+      if (errorMsg?.includes('Too many')) {
+        setError('Too many login attempts. Please try again after 15 minutes.');
+      } else if (errorMsg?.includes('suspended')) {
+        setError('Your account is suspended. Please contact support.');
+      } else if (errorMsg?.includes('locked')) {
+        setError('Your account is locked. Please contact support.');
+      } else {
+        setError(errorMsg || 'Failed to login. Please check your credentials.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +116,16 @@ export default function Login() {
             <button type="submit" disabled={isLoading} className="w-full flex justify-center py-3 px-4 rounded-xl shadow-md shadow-emerald-500/20 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:ring-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? 'Signing in...' : 'Sign in to Dashboard'}
             </button>
+
+            <div className="flex items-center justify-between text-sm mt-4">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
             
             <div className="relative py-4">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>

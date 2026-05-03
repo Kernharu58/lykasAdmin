@@ -6,6 +6,7 @@ export interface User {
   role: 'super_admin' | 'admin' | 'staff' | 'user';
   profilePicture?: string;
   status?: 'active' | 'suspended' | 'locked';
+  emailVerified?: boolean;
 }
 
 export interface AuthResponse {

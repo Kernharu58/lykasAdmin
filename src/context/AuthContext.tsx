@@ -53,12 +53,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('originalAdminToken');
-    setToken(null);
-    setOriginalToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Call backend to blacklist the token
+      if (token) {
+        await api.post('/auth/logout');
+      }
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+      // Still logout locally even if API call fails
+    } finally {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('originalAdminToken');
+      setToken(null);
+      setOriginalToken(null);
+      setUser(null);
+    }
   };
 
   const startImpersonation = (newToken: string, targetUser: User) => {
