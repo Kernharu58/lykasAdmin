@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { PawPrint, AlertCircle, CheckCircle, Mail, Loader } from 'lucide-react';
+import { PawPrint, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import api from '../services/api';
 
 export default function VerifyEmail() {
@@ -20,7 +20,7 @@ export default function VerifyEmail() {
       }
 
       try {
-        const response = await api.post('/auth/verify-email', { token });
+        await api.post('/auth/verify-email', { token });
         setStatus('success');
         setMessage('Email verified successfully! Redirecting to login...');
         
