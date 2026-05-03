@@ -9,8 +9,10 @@ import {
   UserCheck,
   UserCog,
   Users,
+  Key,
 } from 'lucide-react';
 import api from '../services/api';
+import { sendUserPasswordReset } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from '../components/ui/ConfirmModal';
@@ -20,7 +22,7 @@ import type { User } from '../types/auth';
 
 type UserRole = User['role'];
 type UserStatus = NonNullable<User['status']>;
-type ActionType = 'delete' | 'lock' | 'suspend' | 'activate' | 'role';
+type ActionType = 'delete' | 'lock' | 'suspend' | 'activate' | 'role' | 'reset-password';
 
 interface AccountUser extends User {
   _id: string;
@@ -90,6 +92,13 @@ function getActionCopy(action: ConfirmActionState['action'], user: AccountUser |
         title: `Reactivate ${user.displayName || user.email}?`,
         message: 'This restores normal access and removes the current restriction status.',
         confirmText: 'Reactivate Account',
+        isDestructive: false,
+      };
+    case 'reset-password':
+      return {
+        title: `Send password reset to ${user.displayName || user.email}?`,
+        message: 'A password reset email will be sent to this user. They can use it to set a new password.',
+        confirmText: 'Send Reset Email',
         isDestructive: false,
       };
     case 'role':
@@ -191,6 +200,9 @@ export default function Accounts() {
       } else if (action === 'activate') {
         await api.put(`/auth/users/${user._id}/status`, { status: 'active' });
         addToast('success', `${user.displayName || user.email} was reactivated.`);
+      } else if (action === 'reset-password') {
+        await sendUserPasswordReset(user._id);
+        addToast('success', `Password reset email sent to ${user.displayName || user.email}.`);
       } else if (action === 'role' && nextRole) {
         await api.put(`/auth/users/${user._id}/role`, { role: nextRole });
         addToast('success', `${user.displayName || user.email} is now ${nextRole.replace('_', ' ')}.`);
@@ -424,35 +436,45 @@ export default function Accounts() {
                               ) : null}
 
                               {!isCurrentUser && canManageSuperAdmin ? (
-                                userStatus === 'active' ? (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => setConfirmAction({ isOpen: true, action: 'suspend', user })}
-                                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
-                                    >
-                                      <AlertTriangle size={16} />
-                                      Suspend Access
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setConfirmAction({ isOpen: true, action: 'lock', user })}
-                                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
-                                    >
-                                      <Lock size={16} />
-                                      Lock Account
-                                    </button>
-                                  </>
-                                ) : (
+                                <>
                                   <button
                                     type="button"
-                                    onClick={() => setConfirmAction({ isOpen: true, action: 'activate', user })}
-                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                                    onClick={() => setConfirmAction({ isOpen: true, action: 'reset-password', user })}
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2.5 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-100"
                                   >
-                                    <UserCheck size={16} />
-                                    Reactivate Account
+                                    <Key size={16} />
+                                    Send Password Reset
                                   </button>
-                                )
+                                  {userStatus === 'active' ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => setConfirmAction({ isOpen: true, action: 'suspend', user })}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
+                                      >
+                                        <AlertTriangle size={16} />
+                                        Suspend Access
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setConfirmAction({ isOpen: true, action: 'lock', user })}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                                      >
+                                        <Lock size={16} />
+                                        Lock Account
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmAction({ isOpen: true, action: 'activate', user })}
+                                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                                    >
+                                      <UserCheck size={16} />
+                                      Reactivate Account
+                                    </button>
+                                  )}
+                                </>
                               ) : null}
                             </div>
 
