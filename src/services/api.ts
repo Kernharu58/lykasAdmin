@@ -33,7 +33,7 @@ api.interceptors.response.use(
 
 // Admin Password Reset - sends reset email to user
 export const sendUserPasswordReset = async (userId: string) => {
-  const response = await api.post(`/auth/admin/reset-password/${userId}`);
+  const response = await api.post(`/auth/admin/force-reset/${userId}`);
   return response.data;
 };
 
