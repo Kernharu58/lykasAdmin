@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, PawPrint, Calendar, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList, Shield, X, AlertTriangle, Activity } from 'lucide-react';
+import { Home, PawPrint, Calendar, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList, Shield, X, AlertTriangle, Activity, UserCheck, HeartPulse, BarChart3, HandHeart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
@@ -21,15 +21,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: <Home size={20} /> },
-    { name: 'Adoption Apps', path: '/adoptions', icon: <ClipboardList size={20} /> },
-    { name: 'Manage Pets', path: '/pets', icon: <PawPrint size={20} /> },
-    { name: 'Shifts & Vols', path: '/shifts', icon: <Calendar size={20} /> },
-    { name: 'Donations', path: '/donations', icon: <HeartHandshake size={20} /> },
-    { name: 'Live Chat', path: '/chat', icon: <MessageSquare size={20} /> },
-    { name: 'Accounts', path: '/accounts', icon: <Shield size={20} />, roles: ['admin', 'super_admin'] },
-    { name: 'Audit Logs', path: '/audit-logs', icon: <Activity size={20} />, roles: ['super_admin'] },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+    { name: 'Dashboard', path: '/', icon: <Home size={20} />, section: 'Main' },
+    { name: 'Pets', path: '/pets', icon: <PawPrint size={20} />, section: 'Main' },
+    { name: 'Adoptions', path: '/adoptions', icon: <ClipboardList size={20} />, section: 'Main' },
+    { name: 'Fostering', path: '/fosters', icon: <HandHeart size={20} />, section: 'Main' },
+    { name: 'Adopters & Risk', path: '/adopters', icon: <UserCheck size={20} />, section: 'Main' },
+    { name: 'Volunteers', path: '/shifts', icon: <Calendar size={20} />, section: 'Operations' },
+    { name: 'Events', path: '/events', icon: <Calendar size={20} />, section: 'Operations' },
+    { name: 'Donations', path: '/donations', icon: <HeartHandshake size={20} />, section: 'Finance' },
+    { name: 'Health', path: '/health', icon: <HeartPulse size={20} />, section: 'Insights' },
+    { name: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, section: 'Insights' },
+    { name: 'Live Chat', path: '/chat', icon: <MessageSquare size={20} />, section: 'Comms' },
+    { name: 'Settings', path: '/settings', icon: <Settings size={20} />, section: 'Admin' },
+    { name: 'Accounts', path: '/accounts', icon: <Shield size={20} />, roles: ['admin', 'super_admin'], section: 'Admin' },
+    { name: 'Audit Logs', path: '/audit-logs', icon: <Activity size={20} />, roles: ['super_admin'], section: 'Admin' },
   ];
 
   const filteredNavItems = navItems.filter(item => {
@@ -71,15 +76,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
            </div>
         )}
 
-        <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-          {filteredNavItems.map((item) => {
+        <nav className="flex-1 py-5 px-4 overflow-y-auto custom-scrollbar">
+          {filteredNavItems.map((item, index) => {
             const isActive = location.pathname === item.path;
+            const showSection = index === 0 || filteredNavItems[index - 1].section !== item.section;
             return (
-              <Link key={item.name} to={item.path} onClick={() => onClose()}
-                className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${isActive ? 'bg-emerald-500/10 text-emerald-400 font-semibold shadow-inner' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}>
-                <span className={`mr-3 transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`}>{item.icon}</span>
-                {item.name}
-              </Link>
+              <div key={item.name}>
+                {showSection && (
+                  <p className="px-4 pb-2 pt-4 text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-500 first:pt-0">{item.section}</p>
+                )}
+                <Link to={item.path} onClick={() => onClose()}
+                  className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 group ${isActive ? 'bg-emerald-500/10 text-emerald-400 font-semibold shadow-inner' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}>
+                  <span className={`mr-3 transition-colors ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`}>{item.icon}</span>
+                  {item.name}
+                </Link>
+              </div>
             );
           })}
         </nav>

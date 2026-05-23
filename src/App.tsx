@@ -20,6 +20,11 @@ import Donations from './pages/Donations';
 import Adoptions from './pages/Adoptions';
 import Accounts from './pages/Accounts';
 import AuditLogs from './pages/AuditLogs';
+import Events from './pages/Events';
+import Fosters from './pages/Fosters';
+import Adopters from './pages/Adopters';
+import Health from './pages/Health';
+import Reports from './pages/Reports';
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -40,8 +45,13 @@ function AdminLayout() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/adoptions" element={<Adoptions />} />
+            <Route path="/fosters" element={<Fosters />} />
+            <Route path="/adopters" element={<Adopters />} />
             <Route path="/pets" element={<ManagePets />} />
             <Route path="/shifts" element={<Shifts />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/health" element={<Health />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/donations" element={<Donations />} />
             <Route path="/settings" element={<Settings />} />
