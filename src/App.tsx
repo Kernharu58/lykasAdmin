@@ -1,12 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+﻿import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Menu } from 'lucide-react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Sidebar from './components/layout/Sidebar';
+import Navbar from './components/layout/Navbar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import VerifyEmail from './pages/VerifyEmail';
@@ -30,18 +30,17 @@ function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden ml-7">
+    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
-      <div className="flex-1 flex flex-col lg:ml-64 w-full min-w-0 transition-all duration-300">
-        <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center shadow-sm z-30">
-          <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-            <Menu size={24} />
-          </button>
-          <span className="font-bold text-[#1B2A49] text-lg">CarePaws Admin</span>
-        </div>
+      <div className="flex-1 flex flex-col lg:ml-72 w-full min-w-0 transition-all duration-300">
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
         <div className="flex-1 overflow-y-auto w-full">
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs font-bold text-amber-900 sm:hidden">
+            Admin workflows are optimized for desktop; mobile access is best for quick review.
+          </div>
+
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/adoptions" element={<Adoptions />} />
@@ -56,7 +55,6 @@ function AdminLayout() {
             <Route path="/donations" element={<Donations />} />
             <Route path="/settings" element={<Settings />} />
             
-            {/* STRICT ADMIN-ONLY ROUTE */}
             <Route path="/accounts" element={
               <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <Accounts />
