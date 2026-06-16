@@ -57,8 +57,8 @@ export default function Adoptions() {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get('/pets/pending-adoptions');
-      setApplications(response.data);
+      const response = await api.get('/applications?status=pending');
+      setApplications(response.data.applications || response.data);
     } catch (fetchError) {
       console.error('Error fetching adoptions:', fetchError);
       setError('Unable to load adoption applications right now. Please try again.');
@@ -74,10 +74,10 @@ export default function Adoptions() {
   const executeAction = async () => {
     try {
       if (confirmAction.type === 'approve') {
-        await api.put(`/pets/applications/${confirmAction.applicationId}/status`, { status: 'approved' });
+        await api.put(`/applications/${confirmAction.applicationId}/status`, { status: 'approved' });
         addToast('success', `${confirmAction.userName || 'The applicant'} was approved for ${confirmAction.petName}.`);
       } else if (confirmAction.type === 'reject') {
-        await api.put(`/pets/applications/${confirmAction.applicationId}/status`, { status: 'rejected' });
+        await api.put(`/applications/${confirmAction.applicationId}/status`, { status: 'rejected' });
         addToast('warning', `${confirmAction.petName} is available for adoption again.`);
       }
 
