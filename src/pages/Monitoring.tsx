@@ -1,273 +1,178 @@
-import { Heart, AlertTriangle, CheckCircle2, Clock, Download, Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { Heart, AlertTriangle, CheckCircle2, Clock, Download, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Card, PageHeader, SectionHeader, StatCard, Badge } from '../components/ui/SharedUI';
-
-interface MonitoringReport {
-  id: string;
-  petName: string;
-  adopter: string;
-  lastUpdate: string;
-  nextDue: string;
-  health: 'good' | 'concern' | 'alert' | 'pending';
-  weight: string;
-  behavioral: string;
-  vaccinations: 'current' | 'due' | 'overdue';
-}
-
-const mockReports: MonitoringReport[] = [
-  {
-    id: 'MON-001',
-    petName: 'Emma',
-    adopter: 'Maria Santos',
-    lastUpdate: 'Jun 3, 2026',
-    nextDue: 'Jul 3, 2026',
-    health: 'good',
-    weight: '12.5 kg (↑0.5 kg)',
-    behavioral: 'Adjusting well, playful',
-    vaccinations: 'current',
-  },
-  {
-    id: 'MON-002',
-    petName: 'Max',
-    adopter: 'Rico Cruz',
-    lastUpdate: 'May 20, 2026',
-    nextDue: 'Jun 20, 2026',
-    health: 'concern',
-    weight: '28.2 kg (stable)',
-    behavioral: 'Anxious - may need training',
-    vaccinations: 'due',
-  },
-  {
-    id: 'MON-003',
-    petName: 'Luna',
-    adopter: 'Bea Lopez',
-    lastUpdate: 'May 8, 2026',
-    nextDue: 'Jun 8, 2026',
-    health: 'alert',
-    weight: '8.1 kg (↓0.3 kg)',
-    behavioral: 'Lethargy noted',
-    vaccinations: 'overdue',
-  },
-  {
-    id: 'MON-004',
-    petName: 'Buddy',
-    adopter: 'Alex Reyes',
-    lastUpdate: 'Jun 5, 2026',
-    nextDue: 'Jul 5, 2026',
-    health: 'good',
-    weight: '35.2 kg (stable)',
-    behavioral: 'Happy and healthy',
-    vaccinations: 'current',
-  },
-];
+import { LoadingState, ErrorState, EmptyState } from '../components/ui/StateDisplays';
+import { useToast } from '../context/ToastContext';
+import api from '../services/api';
 
 export default function Monitoring() {
-  const [reports, setReports] = useState(mockReports);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterHealth, setFilterHealth] = useState<'all' | 'good' | 'concern' | 'alert' | 'pending'>('all');
-  const [selectedReport, setSelectedReport] = useState<MonitoringReport | null>(null);
+  const [reports, setReports]             = useState<any[]>([]);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState<string | null>(null);
+  const [searchTerm, setSearchTerm]       = useState('');
+  const [filterHealth, setFilterHealth]   = useState('all');
+  const [selected, setSelected]           = useState<any | null>(null);
+  const { addToast } = useToast();
 
-  const filteredReports = reports.filter(r => {
-    const matchesSearch = r.petName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         r.adopter.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterHealth === 'all' || r.health === filterHealth;
-    return matchesSearch && matchesFilter;
+  const fetchReports = async (status = '') => {
+    try {
+      setLoading(true); setError(null);
+      const params = status && status !== 'all' ? `?status=${status}&limit=100` : '?limit=100';
+      const res = await api.get(`/monitoring-reports${params}`);
+      setReports(res.data.reports || res.data || []);
+    } catch (e: any) {
+      setError('Could not load monitoring reports.');
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchReports(); }, []);
+
+  const handleReview = async (id: string, status: 'reviewed' | 'flagged', notes = '') => {
+    try {
+      await api.put(`/monitoring-reports/${id}/review`, { status, adminNotes: notes });
+      addToast('success', `Report marked as ${status}.`);
+      setSelected(null);
+      fetchReports();
+    } catch (e: any) {
+      addToast('error', e.response?.data?.message || 'Could not update.');
+    }
+  };
+
+  const filtered = reports.filter(r => {
+    const term = searchTerm.toLowerCase();
+    const matchSearch = (r.pet?.name || r.petName || '').toLowerCase().includes(term)
+      || (r.submittedBy?.displayName || '').toLowerCase().includes(term);
+    const matchFilter = filterHealth === 'all' || r.status === filterHealth
+      || r.overallCondition?.toLowerCase() === filterHealth;
+    return matchSearch && matchFilter;
   });
 
-  const healthStats = {
-    good: reports.filter(r => r.health === 'good').length,
-    concern: reports.filter(r => r.health === 'concern').length,
-    alert: reports.filter(r => r.health === 'alert').length,
-    overdue: reports.filter(r => r.vaccinations === 'overdue').length,
+  const stats = {
+    good:    reports.filter(r => r.overallCondition === 'Excellent' || r.overallCondition === 'Good').length,
+    concern: reports.filter(r => r.overallCondition === 'Fair').length,
+    alert:   reports.filter(r => r.overallCondition === 'Poor').length,
+    flagged: reports.filter(r => r.status === 'flagged').length,
   };
 
-  const getHealthColor = (health: string) => {
-    switch (health) {
-      case 'good': return 'success';
-      case 'concern': return 'warning';
-      case 'alert': return 'danger';
-      default: return 'default';
-    }
-  };
-
-  const getVaccineColor = (vaccine: string) => {
-    switch (vaccine) {
-      case 'current': return 'success';
-      case 'due': return 'warning';
-      case 'overdue': return 'danger';
-      default: return 'default';
-    }
-  };
+  const healthColor = (c: string) => c === 'Excellent' || c === 'Good' ? 'success' as const : c === 'Fair' ? 'warning' as const : 'danger' as const;
+  const statusColor = (s: string) => s === 'reviewed' ? 'success' as const : s === 'flagged' ? 'danger' as const : 'warning' as const;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
       <PageHeader
         title="Post-Adoption Monitoring"
-        description="Track health, behavior, and welfare of adopted pets. Request updates from adopters."
+        description="Track health, behavior, and welfare of adopted pets. Review reports submitted by adopters."
         action={
-          <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800">
-            <Download size={18} />
-            Export Report
+          <button onClick={() => { const csv = reports.map(r => `${r.pet?.name},${r.submittedBy?.displayName},${r.overallCondition},${r.status},${new Date(r.reportDate || r.createdAt).toLocaleDateString()}`).join('\n'); const b = new Blob([`Pet,Adopter,Condition,Status,Date\n${csv}`], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'monitoring.csv'; a.click(); }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800">
+            <Download size={18} /> Export CSV
           </button>
         }
       />
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={<Heart size={24} />} label="Healthy Pets" value={healthStats.good.toString()} tone="emerald" />
-        <StatCard icon={<Clock size={24} />} label="Need Attention" value={healthStats.concern.toString()} tone="amber" />
-        <StatCard icon={<AlertTriangle size={24} />} label="Alerts" value={healthStats.alert.toString()} tone="rose" />
-        <StatCard icon={<CheckCircle2 size={24} />} label="Vaccine Overdue" value={healthStats.overdue.toString()} tone="slate" />
+        <StatCard icon={<Heart         size={24} />} label="Healthy Pets"     value={stats.good.toString()}    tone="emerald" />
+        <StatCard icon={<Clock         size={24} />} label="Need Attention"   value={stats.concern.toString()} tone="amber" />
+        <StatCard icon={<AlertTriangle size={24} />} label="Poor Condition"   value={stats.alert.toString()}   tone="amber" />
+        <StatCard icon={<CheckCircle2  size={24} />} label="Flagged"          value={stats.flagged.toString()} tone="slate" />
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col md:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search pet or adopter..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-          />
+          <input type="text" placeholder="Search pet or adopter..." value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {(['all', 'good', 'concern', 'alert', 'pending'] as const).map(status => (
-            <button
-              key={status}
-              onClick={() => setFilterHealth(status)}
-              className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${
-                filterHealth === status
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+          {['all', 'pending', 'reviewed', 'flagged'].map(s => (
+            <button key={s} onClick={() => { setFilterHealth(s); fetchReports(s === 'all' ? '' : s); }}
+              className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors ${filterHealth === s ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Reports Grid */}
-      {filteredReports.length === 0 ? (
-        <Card className="text-center py-12">
-          <p className="text-slate-500 font-medium">No monitoring reports found</p>
-        </Card>
-      ) : (
+      {loading ? <LoadingState message="Loading monitoring reports..." />
+        : error ? <ErrorState message={error} onRetry={() => fetchReports()} />
+        : filtered.length === 0 ? <EmptyState title="No reports found" message="Monitoring reports from adopters will appear here." />
+        : (
         <div className="space-y-4">
-          {filteredReports.map(report => (
-            <Card key={report.id} noPadding className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedReport(report)}>
+          {filtered.map(r => (
+            <div key={r._id} onClick={() => setSelected(r)} className="cursor-pointer">
+            <Card noPadding className="overflow-hidden hover:shadow-md transition-shadow">
               <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Pet Info */}
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-lg text-slate-800">{report.petName}</h3>
-                    <Badge variant={getHealthColor(report.health)}>
-                      {report.health.charAt(0).toUpperCase() + report.health.slice(1)}
-                    </Badge>
+                    <h3 className="font-bold text-lg text-slate-800">{r.pet?.name || r.petName || 'Unknown Pet'}</h3>
+                    <Badge variant={healthColor(r.overallCondition)}>{r.overallCondition}</Badge>
+                    <Badge variant={statusColor(r.status)}>{r.status}</Badge>
                   </div>
-                  <p className="text-sm text-slate-600 mb-2">Adopted by: {report.adopter}</p>
+                  <p className="text-sm text-slate-600 mb-2">Adopter: {r.submittedBy?.displayName || '—'}</p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-slate-600">
-                    <span>📏 Weight: {report.weight}</span>
-                    <span>🧬 Behavior: {report.behavioral.split(' ')[0]}...</span>
-                    <span>💉 Vaccines: <Badge variant={getVaccineColor(report.vaccinations)}>{report.vaccinations}</Badge></span>
+                    <span>📅 Month {r.reportMonth}</span>
+                    {r.currentWeight && <span>⚖ {r.currentWeight}</span>}
+                    {r.behaviorAtHome && <span>🐾 {r.behaviorAtHome.slice(0, 30)}{r.behaviorAtHome.length > 30 ? '...' : ''}</span>}
                   </div>
                 </div>
-
-                {/* Timeline */}
-                <div className="flex flex-col gap-2 text-xs text-slate-600 md:text-right">
-                  <span>📅 Last Update: {report.lastUpdate}</span>
-                  <span className={report.nextDue ? 'text-amber-600' : ''}>
-                    ⏰ Next Due: {report.nextDue}
-                  </span>
+                <div className="text-xs text-slate-500 md:text-right">
+                  <p>Submitted: {new Date(r.reportDate || r.createdAt).toLocaleDateString()}</p>
                 </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-sm transition-colors">
-                    Request Update
-                  </button>
-                  <button className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors">
-                    ⋮
-                  </button>
+                <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                  {r.status === 'pending' && (
+                    <button onClick={() => handleReview(r._id, 'reviewed')}
+                      className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-sm">
+                      Approve
+                    </button>
+                  )}
+                  {r.status !== 'flagged' && (
+                    <button onClick={() => handleReview(r._id, 'flagged')}
+                      className="px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-bold text-sm">
+                      Flag
+                    </button>
+                  )}
                 </div>
               </div>
             </Card>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Detail Modal */}
-      {selectedReport && (
+      {selected && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100 flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800">{selectedReport.petName}</h2>
-                <p className="text-slate-600">Monitoring Report #{selectedReport.id}</p>
+                <h2 className="text-2xl font-bold text-slate-800">{selected.pet?.name || selected.petName}</h2>
+                <p className="text-slate-500 text-sm">Month {selected.reportMonth} · {new Date(selected.reportDate || selected.createdAt).toLocaleDateString()}</p>
               </div>
-              <button onClick={() => setSelectedReport(null)} className="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Adopter</p>
-                  <p className="text-lg font-bold text-slate-800">{selectedReport.adopter}</p>
+            <div className="p-6 space-y-4">
+              {[
+                ['Adopter',        selected.submittedBy?.displayName],
+                ['Overall Condition', selected.overallCondition],
+                ['Weight',         selected.currentWeight],
+                ['Diet',           selected.diet],
+                ['Behavior',       selected.behaviorAtHome],
+                ['Concerns',       selected.issuesOrConcerns],
+                ['Comments',       selected.comments],
+              ].filter(([, v]) => v).map(([label, value]) => (
+                <div key={label as string}>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-1">{label as string}</p>
+                  <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg">{value as string}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Health Status</p>
-                  <Badge variant={getHealthColor(selectedReport.health)}>
-                    {selectedReport.health}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Last Update</p>
-                  <p className="text-sm text-slate-700">{selectedReport.lastUpdate}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Next Check</p>
-                  <p className="text-sm text-slate-700">{selectedReport.nextDue}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-slate-500 uppercase mb-2">Weight Progress</p>
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-700">{selectedReport.weight}</p>
-                  <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500" style={{ width: '75%' }}></div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-slate-500 uppercase mb-2">Behavioral Notes</p>
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-700">{selectedReport.behavioral}</p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-slate-500 uppercase mb-2">Vaccination Status</p>
-                <Badge variant={getVaccineColor(selectedReport.vaccinations)}>
-                  {selectedReport.vaccinations.charAt(0).toUpperCase() + selectedReport.vaccinations.slice(1)}
-                </Badge>
-              </div>
-
-              <div className="flex gap-3 justify-end pt-4 border-t border-slate-100">
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="px-4 py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  Close
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700">
-                  Request Update
-                </button>
+              ))}
+              <div className="flex gap-3 justify-end pt-2 border-t border-slate-100">
+                <button onClick={() => setSelected(null)} className="px-4 py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">Close</button>
+                {selected.status !== 'reviewed' && (
+                  <button onClick={() => handleReview(selected._id, 'reviewed')} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700">Mark Reviewed</button>
+                )}
+                {selected.status !== 'flagged' && (
+                  <button onClick={() => handleReview(selected._id, 'flagged')} className="px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600">Flag</button>
+                )}
               </div>
             </div>
           </Card>
