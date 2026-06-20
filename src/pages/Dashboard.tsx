@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PawPrint, HeartHandshake, Users, Activity, TrendingUp, AlertCircle, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { PawPrint, HeartHandshake, Users, Activity, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
 import { PageHeader, Card, SectionHeader } from '../components/ui/SharedUI';
 

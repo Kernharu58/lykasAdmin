@@ -1,7 +1,7 @@
-import { Bell, Send, Users, Clock, CheckCircle2, AlertCircle, Trash2, Plus } from 'lucide-react';
+import { Bell, Send, Users, Clock, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Card, PageHeader, SectionHeader, StatCard, Badge } from '../components/ui/SharedUI';
-import { LoadingState, ErrorState, EmptyState } from '../components/ui/StateDisplays';
+import { Card, PageHeader, StatCard, Badge } from '../components/ui/SharedUI';
+import { LoadingState, ErrorState } from '../components/ui/StateDisplays';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 

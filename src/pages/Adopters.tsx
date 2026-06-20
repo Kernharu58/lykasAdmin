@@ -1,15 +1,8 @@
-import { AlertTriangle, Ban, FileText, ShieldAlert, UserCheck, Search } from 'lucide-react';
+import { AlertTriangle, FileText, ShieldAlert, UserCheck, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Badge, Card, PageHeader, SectionHeader, StatCard } from '../components/ui/SharedUI';
 import { LoadingState, ErrorState, EmptyState } from '../components/ui/StateDisplays';
 import api from '../services/api';
-
-function riskVariant(score: number | null) {
-  if (score === null) return 'default' as const;
-  if (score < 15)  return 'danger'  as const;
-  if (score < 24)  return 'warning' as const;
-  return 'success' as const;
-}
 
 function riskLabel(level: string) {
   if (level === 'High')   return 'danger'  as const;
