@@ -128,7 +128,7 @@ export default function Monitoring() {
                   )}
                   {r.status !== 'flagged' && (
                     <button onClick={() => handleReview(r._id, 'flagged')}
-                      className="px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-bold text-sm">
+                      className="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-sm">
                       Flag
                     </button>
                   )}
@@ -171,7 +171,7 @@ export default function Monitoring() {
                   <button onClick={() => handleReview(selected._id, 'reviewed')} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700">Mark Reviewed</button>
                 )}
                 {selected.status !== 'flagged' && (
-                  <button onClick={() => handleReview(selected._id, 'flagged')} className="px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600">Flag</button>
+                  <button onClick={() => handleReview(selected._id, 'flagged')} className="px-4 py-2 rounded-lg bg-rose-600 text-white font-bold hover:bg-rose-700">Flag</button>
                 )}
               </div>
             </div>

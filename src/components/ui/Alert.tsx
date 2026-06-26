@@ -9,14 +9,14 @@ interface AlertProps {
 export default function Alert({ type, message, className = '' }: AlertProps) {
   const styles = {
     success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
+    error: 'bg-rose-50 border-rose-200 text-rose-800',
     warning: 'bg-amber-50 border-amber-200 text-amber-800',
     info: 'bg-blue-50 border-blue-200 text-blue-800',
   };
 
   const icons = {
     success: <CheckCircle className="h-5 w-5 text-emerald-600" />,
-    error: <AlertCircle className="h-5 w-5 text-red-600" />,
+    error: <AlertCircle className="h-5 w-5 text-rose-600" />,
     warning: <AlertTriangle className="h-5 w-5 text-amber-600" />,
     info: <Info className="h-5 w-5 text-blue-600" />,
   };

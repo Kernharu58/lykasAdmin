@@ -104,9 +104,9 @@ export default function Reports() {
                   <p className="text-xs font-bold text-emerald-600 uppercase">Approved</p>
                   <p className="font-extrabold text-emerald-800">{adoptions?.summary?.approved || 0}</p>
                 </div>
-                <div className="bg-red-50 rounded-lg p-3">
-                  <p className="text-xs font-bold text-red-500 uppercase">Rejected</p>
-                  <p className="font-extrabold text-red-800">{adoptions?.summary?.rejected || 0}</p>
+                <div className="bg-rose-50 rounded-lg p-3">
+                  <p className="text-xs font-bold text-rose-500 uppercase">Rejected</p>
+                  <p className="font-extrabold text-rose-800">{adoptions?.summary?.rejected || 0}</p>
                 </div>
               </div>
             </Card>

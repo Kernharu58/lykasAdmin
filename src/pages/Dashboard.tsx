@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PawPrint, HeartHandshake, Users, Activity, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
-import { PageHeader, Card, SectionHeader } from '../components/ui/SharedUI';
+import { PageHeader, Card, SectionHeader, StatCard } from '../components/ui/SharedUI';
 
 interface RecentActivity {
   id: string;
@@ -93,7 +93,7 @@ export default function Dashboard() {
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <Card className="flex items-center relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 opacity-5 transform group-hover:scale-110 transition-transform duration-500">
             <PawPrint size={80} />

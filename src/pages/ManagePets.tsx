@@ -125,12 +125,12 @@ export default function ManagePets() {
                   <div className="h-48 overflow-hidden relative bg-slate-100">
                     <img src={pet.imageUrl} alt={pet.name} className="w-full h-full object-cover" />
                     <div
-                      className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+                      className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-sm ${
                         pet.status === 'Available'
-                          ? 'bg-emerald-100 text-emerald-700'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                           : pet.status === 'Pending'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-slate-100 text-slate-700'
+                            ? 'bg-amber-100 text-amber-800 border-amber-200'
+                            : 'bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
                       {pet.status}

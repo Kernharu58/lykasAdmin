@@ -183,11 +183,11 @@ export default function Adopters() {
               </div>
 
               {(profile.summary?.hasFailedInterview || profile.summary?.hasFailedHomeVisit || profile.summary?.hasFlaggedReports) && (
-                <div className="rounded-lg border border-red-100 bg-red-50 p-3 space-y-1">
-                  <p className="text-xs font-bold text-red-600 uppercase">Risk Flags</p>
-                  {profile.summary?.hasFailedInterview   && <p className="text-sm text-red-700">• Failed interview on record</p>}
-                  {profile.summary?.hasFailedHomeVisit   && <p className="text-sm text-red-700">• Failed home visit on record</p>}
-                  {profile.summary?.hasFlaggedReports    && <p className="text-sm text-red-700">• Flagged monitoring reports</p>}
+                <div className="rounded-lg border border-rose-100 bg-rose-50 p-3 space-y-1">
+                  <p className="text-xs font-bold text-rose-600 uppercase">Risk Flags</p>
+                  {profile.summary?.hasFailedInterview   && <p className="text-sm text-rose-700">• Failed interview on record</p>}
+                  {profile.summary?.hasFailedHomeVisit   && <p className="text-sm text-rose-700">• Failed home visit on record</p>}
+                  {profile.summary?.hasFlaggedReports    && <p className="text-sm text-rose-700">• Flagged monitoring reports</p>}
                 </div>
               )}
 

@@ -46,7 +46,7 @@ export default function Fosters() {
       setLoading(true); setError(null);
       const res = await api.get('/foster?status=active&limit=50');
       setFosters(res.data.fosters || res.data);
-    } catch (e: any) {
+    } catch {
       setError('Could not load foster placements.');
     } finally { setLoading(false); }
   };
@@ -86,9 +86,9 @@ export default function Fosters() {
     } finally { setSubmitting(false); }
   };
 
-  const active      = fosters.filter(f => f.status === 'active');
-  const endingSoon  = fosters.filter(f => { const d = daysLeft(f.expectedEndDate); return d !== null && d <= 14 && d >= 0; });
-  const reportsOk   = fosters.filter(f => f.weeklyReportsRequired && f.weeklyReportsSubmitted === f.weeklyReportsRequired);
+  const active     = fosters.filter(f => f.status === 'active');
+  const endingSoon = fosters.filter(f => { const d = daysLeft(f.expectedEndDate); return d !== null && d <= 14 && d >= 0; });
+  const reportsOk  = fosters.filter(f => f.weeklyReportsRequired && f.weeklyReportsSubmitted === f.weeklyReportsRequired);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
@@ -97,102 +97,111 @@ export default function Fosters() {
         description="Track mandatory trial periods, health updates, and foster-to-adoption decisions."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={<HeartHandshake size={24} />} label="Active Fosters"    value={active.length.toString()}      tone="emerald" />
-        <StatCard icon={<CalendarClock  size={24} />} label="Ending Soon"       value={endingSoon.length.toString()}  tone="amber"   />
-        <StatCard icon={<Activity       size={24} />} label="Reports Complete"  value={reportsOk.length.toString()}   tone="blue"     />
-        <StatCard icon={<ShieldCheck    size={24} />} label="Total Placements"  value={fosters.length.toString()}     tone="purple"  />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={<HeartHandshake size={22} />} label="Active Fosters"   value={active.length.toString()}       tone="emerald" />
+        <StatCard icon={<CalendarClock  size={22} />} label="Ending Soon"      value={endingSoon.length.toString()}   tone="amber"   />
+        <StatCard icon={<Activity       size={22} />} label="Reports Complete" value={reportsOk.length.toString()}    tone="blue"    />
+        <StatCard icon={<ShieldCheck    size={22} />} label="Total Placements" value={fosters.length.toString()}      tone="purple"  />
       </div>
 
-      {loading && <LoadingState />}
-      {error   && <ErrorState message={error} />}
+      {loading && <LoadingState message="Loading foster placements..." />}
+      {error   && <ErrorState message={error} onRetry={fetchFosters} />}
 
       {!loading && !error && (
-        <Card>
-          <SectionHeader title="Active Foster Placements" />
-          {fosters.length === 0
-            ? <EmptyState message="No foster placements found." />
-            : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
-                      <th className="pb-2 pr-4 font-medium">Pet</th>
-                      <th className="pb-2 pr-4 font-medium">Fosterer</th>
-                      <th className="pb-2 pr-4 font-medium">Trial</th>
-                      <th className="pb-2 pr-4 font-medium">Reports</th>
-                      <th className="pb-2 pr-4 font-medium">Days Left</th>
-                      <th className="pb-2 pr-4 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fosters.map(f => {
-                      const dl = daysLeft(f.expectedEndDate);
-                      const rp = reportProgress(f);
-                      const reportsComplete = f.weeklyReportsRequired
-                        ? f.weeklyReportsSubmitted === f.weeklyReportsRequired
-                        : true;
-                      return (
-                        <tr key={f._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                          <td className="py-3 pr-4 font-semibold text-gray-800">{f.pet?.name}</td>
-                          <td className="py-3 pr-4 text-gray-600">{f.fosterer?.displayName}</td>
-                          <td className="py-3 pr-4 text-gray-500">
-                            {f.trialDurationDays ? `${f.trialDurationDays}d` : '—'}
-                          </td>
-                          <td className="py-3 pr-4">
-                            <span className={`font-medium ${reportsComplete ? 'text-emerald-600' : 'text-amber-600'}`}>
-                              {rp || '—'}
-                            </span>
-                          </td>
-                          <td className="py-3 pr-4">
-                            {dl !== null
-                              ? <span className={dl <= 7 ? 'text-red-600 font-semibold' : 'text-gray-600'}>{dl}d</span>
-                              : '—'
-                            }
-                          </td>
-                          <td className="py-3 pr-4">
-                            <Badge variant={f.status === 'active' ? 'success' : 'default'}>{f.status}</Badge>
-                          </td>
-                          <td className="py-3">
-                            <button
-                              onClick={() => handleSelectFoster(f)}
-                              className="text-xs text-white bg-emerald-700 hover:bg-emerald-800 px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                              Finalize
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )
-          }
+        <Card noPadding>
+          <div className="p-5 border-b border-slate-100 bg-slate-50/60">
+            <SectionHeader title="Active Foster Placements" description="Showing active placements only. Use the Finalize button to close a trial." />
+          </div>
+
+          {fosters.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                title="No active placements"
+                message="Foster placements created from approved adoption applications will appear here."
+              />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/40">
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Pet</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Fosterer</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Trial</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Reports</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Days Left</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Agreement</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {fosters.map(f => {
+                    const dl = daysLeft(f.expectedEndDate);
+                    const rp = reportProgress(f);
+                    const reportsComplete = f.weeklyReportsRequired
+                      ? f.weeklyReportsSubmitted === f.weeklyReportsRequired
+                      : true;
+                    return (
+                      <tr key={f._id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-5 py-4 font-semibold text-slate-800">{f.pet?.name}</td>
+                        <td className="px-5 py-4">
+                          <p className="text-slate-800 font-medium">{f.fosterer?.displayName}</p>
+                          <p className="text-xs text-slate-400">{f.fosterer?.email}</p>
+                        </td>
+                        <td className="px-5 py-4 text-slate-500">{f.trialDurationDays ? `${f.trialDurationDays}d` : '—'}</td>
+                        <td className="px-5 py-4">
+                          <span className={`font-semibold ${reportsComplete ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {rp || '—'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          {dl !== null
+                            ? <span className={`font-semibold ${dl <= 7 ? 'text-rose-600' : dl <= 14 ? 'text-amber-600' : 'text-slate-600'}`}>{dl}d</span>
+                            : <span className="text-slate-400">—</span>}
+                        </td>
+                        <td className="px-5 py-4">
+                          {f.fosterAgreementSigned
+                            ? <Badge variant="success">Signed</Badge>
+                            : <Badge variant="warning">Pending</Badge>}
+                        </td>
+                        <td className="px-5 py-4">
+                          <button
+                            onClick={() => handleSelectFoster(f)}
+                            className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg transition-colors"
+                          >
+                            Finalize
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       )}
 
       {/* Finalize Modal */}
       {showEndModal && selected && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-1">Finalize: {selected.pet.name}</h3>
-            <p className="text-sm text-gray-500 mb-4">Fosterer: {selected.fosterer.displayName}</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-in zoom-in-95">
+            <h3 className="text-lg font-extrabold text-slate-800 mb-0.5">Finalize: {selected.pet.name}</h3>
+            <p className="text-sm text-slate-500 mb-5">Fosterer: <span className="font-medium text-slate-700">{selected.fosterer.displayName}</span></p>
 
             {/* Eligibility banner */}
             {eligibility && (
-              <div className={`flex items-start gap-2 rounded-xl p-3 mb-4 ${eligibility.allowed ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-100'}`}>
+              <div className={`flex items-start gap-2.5 rounded-xl p-3 mb-4 border ${eligibility.allowed ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-100'}`}>
                 {eligibility.allowed
                   ? <CheckCircle2 size={18} className="text-emerald-600 mt-0.5 shrink-0" />
-                  : <XCircle      size={18} className="text-red-500 mt-0.5 shrink-0" />
+                  : <XCircle      size={18} className="text-rose-500  mt-0.5 shrink-0" />
                 }
                 <div>
-                  <p className={`text-sm font-medium ${eligibility.allowed ? 'text-emerald-700' : 'text-red-700'}`}>
+                  <p className={`text-sm font-semibold ${eligibility.allowed ? 'text-emerald-700' : 'text-rose-700'}`}>
                     {eligibility.allowed ? 'Eligible for adoption' : 'Not yet eligible'}
                   </p>
                   {!eligibility.allowed && eligibility.reason && (
-                    <p className="text-xs text-red-600 mt-0.5">{eligibility.reason}</p>
+                    <p className="text-xs text-rose-600 mt-0.5">{eligibility.reason}</p>
                   )}
                 </div>
               </div>
@@ -200,9 +209,10 @@ export default function Fosters() {
 
             {/* Report progress */}
             {selected.weeklyReportsRequired != null && (
-              <div className="mb-4 bg-gray-50 rounded-xl p-3">
-                <p className="text-sm text-gray-600">
-                  Weekly reports: <span className="font-semibold text-gray-800">
+              <div className="mb-4 bg-slate-50 border border-slate-100 rounded-xl p-3">
+                <p className="text-sm text-slate-600">
+                  Weekly reports:{' '}
+                  <span className="font-semibold text-slate-800">
                     {selected.weeklyReportsSubmitted ?? 0} / {selected.weeklyReportsRequired} submitted
                   </span>
                 </p>
@@ -210,11 +220,11 @@ export default function Fosters() {
             )}
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Outcome</label>
               <select
                 value={outcome}
                 onChange={e => setOutcome(e.target.value as any)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
               >
                 <option value="RETURNED">Return to shelter</option>
                 <option value="EXTENDED">Extend trial (14 days)</option>
@@ -223,26 +233,26 @@ export default function Fosters() {
             </div>
 
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Staff notes</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Staff notes</label>
               <textarea
                 value={returnNotes}
                 onChange={e => setReturnNotes(e.target.value)}
                 placeholder="Optional notes about this decision…"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
               />
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowEndModal(false); setSelected(null); }}
-                className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2 text-sm hover:bg-gray-50 transition-colors"
+                className="flex-1 border border-slate-200 text-slate-700 rounded-xl py-2.5 text-sm font-medium hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleEnd}
                 disabled={submitting || (outcome === 'ADOPTED' && eligibility !== null && !eligibility?.allowed)}
-                className="flex-1 bg-emerald-700 text-white rounded-xl py-2 text-sm font-semibold hover:bg-emerald-800 transition-colors disabled:opacity-50"
+                className="flex-1 bg-emerald-600 text-white rounded-xl py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
               >
                 {submitting ? 'Saving…' : 'Confirm'}
               </button>

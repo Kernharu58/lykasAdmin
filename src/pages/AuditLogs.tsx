@@ -114,7 +114,7 @@ export default function AuditLogs() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[760px]">
                   <thead>
-                    <tr className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
+                    <tr className="bg-slate-50/40 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
                       <th className="p-4 font-bold">Timestamp</th>
                       <th className="p-4 font-bold">Action</th>
                       <th className="p-4 font-bold">Actor</th>

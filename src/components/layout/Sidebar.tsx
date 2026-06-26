@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, PawPrint, Calendar, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList, Shield, X, AlertTriangle, Activity, UserCheck, HeartPulse, BarChart3, HandHeart } from 'lucide-react';
+import { Home, PawPrint, Calendar, CalendarDays, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList, Shield, X, AlertTriangle, Activity, UserCheck, HeartPulse, BarChart3, HandHeart, UsersRound } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
@@ -26,8 +26,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Adoptions', path: '/adoptions', icon: <ClipboardList size={20} />, section: 'Main' },
     { name: 'Fostering', path: '/fosters', icon: <HandHeart size={20} />, section: 'Main' },
     { name: 'Adopters & Risk', path: '/adopters', icon: <UserCheck size={20} />, section: 'Main' },
-    { name: 'Volunteers', path: '/shifts', icon: <Calendar size={20} />, section: 'Operations' },
-    { name: 'Events', path: '/events', icon: <Calendar size={20} />, section: 'Operations' },
+    { name: 'Volunteers', path: '/shifts', icon: <UsersRound size={20} />, section: 'Operations' },
+    { name: 'Events', path: '/events', icon: <CalendarDays size={20} />, section: 'Operations' },
     { name: 'Donations', path: '/donations', icon: <HeartHandshake size={20} />, section: 'Finance' },
     { name: 'Health', path: '/health', icon: <HeartPulse size={20} />, section: 'Insights' },
     { name: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, section: 'Insights' },

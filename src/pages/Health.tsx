@@ -153,7 +153,7 @@ export default function Health() {
                             )}
                             {r.status !== 'flagged' && (
                               <button onClick={() => handleReview(r._id, 'flagged')}
-                                className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-100">
+                                className="rounded-lg bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-100">
                                 Flag
                               </button>
                             )}

@@ -117,7 +117,7 @@ export default function Events() {
                   <div className="flex gap-2 pt-2">
                     {event.status !== 'cancelled' && event.status !== 'completed' && (
                       <button onClick={() => handleCancel(event._id, event.title)}
-                        className="flex-1 rounded-lg border border-red-200 text-red-600 px-3 py-2 text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-1">
+                        className="flex-1 rounded-lg border border-rose-200 text-rose-600 px-3 py-2 text-sm font-bold hover:bg-rose-50 flex items-center justify-center gap-1">
                         <X size={14} /> Cancel
                       </button>
                     )}
