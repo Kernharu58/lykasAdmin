@@ -1,4 +1,4 @@
-import { Activity, CalendarClock, HeartHandshake, MessageSquare, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
+import { Activity, CalendarClock, HeartHandshake, ShieldCheck, CheckCircle2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Badge, Card, PageHeader, SectionHeader, StatCard } from '../components/ui/SharedUI';
 import { LoadingState, ErrorState, EmptyState } from '../components/ui/StateDisplays';
@@ -35,7 +35,6 @@ export default function Fosters() {
   const [error, setError]               = useState<string | null>(null);
   const [selected, setSelected]         = useState<Foster | null>(null);
   const [showEndModal, setShowEndModal] = useState(false);
-  const [showStartModal, setShowStartModal] = useState(false);
   const [returnNotes, setReturnNotes]   = useState('');
   const [outcome, setOutcome]           = useState<'ADOPTED' | 'RETURNED' | 'EXTENDED'>('RETURNED');
   const [eligibility, setEligibility]   = useState<{ allowed: boolean; reason?: string } | null>(null);
@@ -101,8 +100,8 @@ export default function Fosters() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <StatCard icon={<HeartHandshake size={24} />} label="Active Fosters"    value={active.length.toString()}      tone="emerald" />
         <StatCard icon={<CalendarClock  size={24} />} label="Ending Soon"       value={endingSoon.length.toString()}  tone="amber"   />
-        <StatCard icon={<Activity       size={24} />} label="Reports Complete"  value={reportsOk.length.toString()}   tone="sky"     />
-        <StatCard icon={<ShieldCheck    size={24} />} label="Total Placements"  value={fosters.length.toString()}     tone="violet"  />
+        <StatCard icon={<Activity       size={24} />} label="Reports Complete"  value={reportsOk.length.toString()}   tone="blue"     />
+        <StatCard icon={<ShieldCheck    size={24} />} label="Total Placements"  value={fosters.length.toString()}     tone="purple"  />
       </div>
 
       {loading && <LoadingState />}
@@ -153,7 +152,7 @@ export default function Fosters() {
                             }
                           </td>
                           <td className="py-3 pr-4">
-                            <Badge tone={f.status === 'active' ? 'success' : 'neutral'} label={f.status} />
+                            <Badge variant={f.status === 'active' ? 'success' : 'default'}>{f.status}</Badge>
                           </td>
                           <td className="py-3">
                             <button
