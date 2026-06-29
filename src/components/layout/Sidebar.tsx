@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, PawPrint, Calendar, CalendarDays, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList, Shield, X, AlertTriangle, Activity, UserCheck, HeartPulse, BarChart3, HandHeart, UsersRound } from 'lucide-react';
+import { Home, PawPrint, CalendarDays, MessageSquare, Settings, LogOut, HeartHandshake, ClipboardList, Shield, X, AlertTriangle, Activity, UserCheck, HeartPulse, BarChart3, HandHeart, UsersRound, Bell, Monitor } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
@@ -31,6 +31,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Donations', path: '/donations', icon: <HeartHandshake size={20} />, section: 'Finance' },
     { name: 'Health', path: '/health', icon: <HeartPulse size={20} />, section: 'Insights' },
     { name: 'Reports', path: '/reports', icon: <BarChart3 size={20} />, section: 'Insights' },
+    { name: 'Monitoring', path: '/monitoring', icon: <Monitor size={20} />, section: 'Insights' },
+    { name: 'Notifications', path: '/notifications', icon: <Bell size={20} />, section: 'Comms' },
     { name: 'Live Chat', path: '/chat', icon: <MessageSquare size={20} />, section: 'Comms' },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} />, section: 'Admin' },
     { name: 'Accounts', path: '/accounts', icon: <Shield size={20} />, roles: ['admin', 'super_admin'], section: 'Admin' },

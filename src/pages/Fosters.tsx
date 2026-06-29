@@ -71,6 +71,7 @@ export default function Fosters() {
 
   const handleEnd = async () => {
     if (!selected) return;
+    // UI pre-check (UX only — server re-validates eligibility independently via endFoster)
     if (outcome === 'ADOPTED' && eligibility && !eligibility.allowed) {
       addToast('error', eligibility.reason || 'Not eligible for adoption yet.');
       return;

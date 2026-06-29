@@ -102,7 +102,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             <Search size={20} />
           </button>
 
-          <button className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100" aria-label="Notifications">
+          <button onClick={() => navigate('/notifications')} className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100" aria-label="Notifications">
             <Bell size={20} />
             <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500" />
           </button>

@@ -1,4 +1,4 @@
-﻿import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
@@ -25,6 +25,7 @@ import Fosters from './pages/Fosters';
 import Adopters from './pages/Adopters';
 import Health from './pages/Health';
 import Reports from './pages/Reports';
+import Monitoring from './pages/Monitoring';
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -32,7 +33,7 @@ function AdminLayout() {
   return (
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      
+
       <div className="flex-1 flex flex-col lg:ml-72 w-full min-w-0 transition-all duration-300">
         <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
@@ -42,31 +43,71 @@ function AdminLayout() {
           </div>
 
           <Routes>
+            {/* Public admin routes (accessible by all authenticated staff) */}
             <Route path="/" element={<Dashboard />} />
-            <Route path="/adoptions" element={<Adoptions />} />
-            <Route path="/fosters" element={<Fosters />} />
-            <Route path="/adopters" element={<Adopters />} />
             <Route path="/pets" element={<ManagePets />} />
-            <Route path="/shifts" element={<Shifts />} />
             <Route path="/events" element={<Events />} />
-            <Route path="/health" element={<Health />} />
-            <Route path="/reports" element={<Reports />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/donations" element={<Donations />} />
             <Route path="/settings" element={<Settings />} />
-            
+
+            {/* FIX (Warning #1): Restrict adoption/foster actions to admin+ only; staff read-only */}
+            <Route path="/adoptions" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <Adoptions />
+              </ProtectedRoute>
+            } />
+            <Route path="/fosters" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <Fosters />
+              </ProtectedRoute>
+            } />
+            <Route path="/adopters" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <Adopters />
+              </ProtectedRoute>
+            } />
+
+            {/* FIX (Warning #1): Restrict financial data to admin+ */}
+            <Route path="/donations" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <Donations />
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <Reports />
+              </ProtectedRoute>
+            } />
+
+            {/* FIX (Warning #1): Shifts and health accessible to all staff */}
+            <Route path="/shifts" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
+                <Shifts />
+              </ProtectedRoute>
+            } />
+            <Route path="/health" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
+                <Health />
+              </ProtectedRoute>
+            } />
+            <Route path="/monitoring" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
+                <Monitoring />
+              </ProtectedRoute>
+            } />
+
+            {/* Existing super-admin-only routes */}
             <Route path="/accounts" element={
               <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                 <Accounts />
               </ProtectedRoute>
             } />
-
             <Route path="/audit-logs" element={
               <ProtectedRoute allowedRoles={['super_admin']}>
                 <AuditLogs />
               </ProtectedRoute>
             } />
-            
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
@@ -89,13 +130,13 @@ export default function App() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route 
-                  path="/*" 
+                <Route
+                  path="/*"
                   element={
                     <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
                       <AdminLayout />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
               </Routes>
             </Router>

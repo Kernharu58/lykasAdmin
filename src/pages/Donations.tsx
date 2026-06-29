@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, HeartHandshake, TrendingUp, Download, Search, Eye } from 'lucide-react';
+import { DollarSign, HeartHandshake, TrendingUp, Download, Search, Eye, X } from 'lucide-react';
 import api from '../services/api';
 import { ErrorState, LoadingState, EmptyState } from '../components/ui/StateDisplays';
 import { Badge, Card, PageHeader, SectionHeader, StatCard, Toolbar } from '../components/ui/SharedUI';
@@ -17,14 +17,6 @@ interface Donation {
   paymongoRefId?: string;
 }
 
-const MOCK_DONATIONS: Donation[] = [
-  { _id: '1', donorName: 'Maria Santos',   email: 'maria@gmail.com',   amount: 5000, date: '2026-06-05', method: 'GCash',         status: 'Completed', campaign: 'General Fund',   paymongoRefId: 'pay_123' },
-  { _id: '2', donorName: 'Juan Dela Cruz', email: 'juan@yahoo.com',    amount: 2500, date: '2026-06-04', method: 'Credit Card',   status: 'Completed', campaign: 'Medical Care',   paymongoRefId: 'pay_124' },
-  { _id: '3', donorName: 'Anonymous',      email: 'anon@email.com',    amount: 1000, date: '2026-06-03', method: 'Bank Transfer', status: 'Pending',   campaign: 'Food & Supplies',paymongoRefId: 'pay_125' },
-  { _id: '4', donorName: 'Rosa Garcia',    email: 'rosa@outlook.com',  amount: 3500, date: '2026-06-02', method: 'PayMaya',       status: 'Completed', campaign: 'General Fund',   paymongoRefId: 'pay_126' },
-  { _id: '5', donorName: 'Carlos Reyes',   email: 'carlos@gmail.com',  amount: 7500, date: '2026-06-01', method: 'Credit Card',   status: 'Completed', campaign: 'Building Fund',  paymongoRefId: 'pay_127' },
-];
-
 function statusVariant(s: string): 'success' | 'warning' | 'danger' {
   if (s === 'Completed') return 'success';
   if (s === 'Pending')   return 'warning';
@@ -37,12 +29,15 @@ export default function Donations() {
   const [error, setError]             = useState<string | null>(null);
   const [searchTerm, setSearchTerm]   = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
-  const [useMockData, setUseMockData] = useState(false);
+  // FIX (Warning #4): State for donation detail modal
+  const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
   const { addToast } = useToast();
 
   const fetchDonations = async () => {
     try {
-      setIsLoading(true); setError(null);
+      setIsLoading(true);
+      // FIX (Critical #2): Remove mock data fallback — set real error state instead
+      setError(null);
       const response = await api.get('/payments?type=donation&status=paid&limit=50');
       const payments = response.data.payments || response.data || [];
       const mapped: Donation[] = payments.map((p: any) => ({
@@ -57,12 +52,13 @@ export default function Donations() {
         paymongoRefId: p.paymongoPaymentId || '',
       }));
       setDonations(mapped);
-      setUseMockData(false);
     } catch {
-      setError("Could not load donation records — showing sample data instead.");
-      setDonations(MOCK_DONATIONS);
-      setUseMockData(true);
-    } finally { setIsLoading(false); }
+      // FIX (Critical #2): Show real error state — never fall back to mock data
+      setError('Could not load donation records. Please check your connection and try again.');
+      setDonations([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => { fetchDonations(); }, []);
@@ -86,9 +82,9 @@ export default function Donations() {
     return matchesSearch && matchesFilter;
   });
 
-  const totalRaised     = donations.reduce((s, d) => s + d.amount, 0);
-  const totalThisMonth  = donations.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).reduce((s, d) => s + d.amount, 0);
-  const uniqueDonors    = new Set(donations.map(d => d.email)).size;
+  const totalRaised    = donations.reduce((s, d) => s + d.amount, 0);
+  const totalThisMonth = donations.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).reduce((s, d) => s + d.amount, 0);
+  const uniqueDonors   = new Set(donations.map(d => d.email)).size;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
@@ -98,7 +94,8 @@ export default function Donations() {
         action={
           <button
             onClick={handleExportCSV}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm"
+            disabled={donations.length === 0}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={18} />
             Export CSV
@@ -106,20 +103,13 @@ export default function Donations() {
         }
       />
 
-      {useMockData && (
-        <div className="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-medium flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
-          Showing sample data — backend not yet connected.
-        </div>
-      )}
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard icon={<DollarSign    size={22} />} label="Total Raised (Year)"  value={`₱${totalRaised.toLocaleString()}`}    tone="emerald" />
         <StatCard icon={<TrendingUp    size={22} />} label="Donations This Month" value={`₱${totalThisMonth.toLocaleString()}`}  tone="blue"    />
         <StatCard icon={<HeartHandshake size={22}/>} label="Unique Donors"        value={String(uniqueDonors)}                   tone="purple"  />
       </div>
 
-      {error && !useMockData ? (
+      {error ? (
         <ErrorState title="Could not load donations" message={error} onRetry={fetchDonations} />
       ) : isLoading ? (
         <LoadingState message="Loading financial records..." />
@@ -154,7 +144,7 @@ export default function Donations() {
 
           {filtered.length === 0 ? (
             <div className="p-6">
-              <EmptyState title="No donations found" message="Try adjusting your search or filter." />
+              <EmptyState title="No donations found" message="Try adjusting your search or filter. Donations made through the app will appear here." />
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -185,7 +175,12 @@ export default function Donations() {
                         <Badge variant={statusVariant(d.status)}>{d.status}</Badge>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors" title="View details">
+                        {/* FIX (Warning #4): Wire up the Eye button to open a detail modal */}
+                        <button
+                          onClick={() => setSelectedDonation(d)}
+                          className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition-colors"
+                          title="View details"
+                        >
                           <Eye size={16} />
                         </button>
                       </td>
@@ -200,6 +195,46 @@ export default function Donations() {
             <span>Showing {filtered.length} of {donations.length} donations</span>
           </div>
         </Card>
+      )}
+
+      {/* FIX (Warning #4): Donation detail modal */}
+      {selectedDonation && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-800">Donation Details</h3>
+                <p className="text-sm text-slate-500 mt-0.5">{selectedDonation.paymongoRefId || 'No reference ID'}</p>
+              </div>
+              <button onClick={() => setSelectedDonation(null)} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {[
+                ['Donor',    selectedDonation.donorName],
+                ['Email',    selectedDonation.email || '—'],
+                ['Amount',   `₱${selectedDonation.amount.toLocaleString()}`],
+                ['Campaign', selectedDonation.campaign],
+                ['Method',   selectedDonation.method],
+                ['Date',     new Date(selectedDonation.date).toLocaleDateString('en-PH', { dateStyle: 'long' })],
+                ['Status',   selectedDonation.status],
+                ['PayMongo Ref', selectedDonation.paymongoRefId || '—'],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between items-center py-2 border-b border-slate-50">
+                  <span className="text-sm text-slate-500 font-medium">{label}</span>
+                  <span className="text-sm text-slate-800 font-semibold text-right max-w-[60%] break-all">{value}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setSelectedDonation(null)}
+              className="mt-5 w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
