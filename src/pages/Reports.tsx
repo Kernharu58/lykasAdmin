@@ -113,11 +113,10 @@ export default function Reports() {
 
             {/* Financial summary */}
             <Card>
-              <SectionHeader title="Financial Summary" description="Adoption fees + donations" />
+              <SectionHeader title="Financial Summary" description="Donations" />
               <div className="mt-5 space-y-4">
                 {[
                   { label: 'Total Donations',    value: financial?.summary?.totalDonations,    color: 'bg-emerald-600' },
-                  { label: 'Adoption Fees',       value: financial?.summary?.totalAdoptionFees, color: 'bg-teal-500' },
                   { label: 'Total Revenue',        value: financial?.summary?.totalRevenue,      color: 'bg-slate-700' },
                 ].map(({ label, value, color }) => (
                   <div key={label}>
@@ -131,14 +130,10 @@ export default function Reports() {
                     </div>
                   </div>
                 ))}
-                <div className="mt-4 grid grid-cols-2 gap-3 text-center text-sm">
+                <div className="mt-4 grid grid-cols-1 gap-3 text-center text-sm">
                   <div className="bg-slate-50 rounded-lg p-3">
                     <p className="text-xs font-bold text-slate-500 uppercase">Donations</p>
                     <p className="font-extrabold text-slate-800">{financial?.summary?.donationCount || 0}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-xs font-bold text-slate-500 uppercase">Fee Payments</p>
-                    <p className="font-extrabold text-slate-800">{financial?.summary?.feeCount || 0}</p>
                   </div>
                 </div>
               </div>

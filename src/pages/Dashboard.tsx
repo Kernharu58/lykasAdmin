@@ -33,7 +33,7 @@ export default function Dashboard() {
           availablePets:    d.pets?.available        || 0,
           pendingAdoptions: d.applications?.pending  || 0,
           activeVolunteers: d.volunteers?.active     || 0,
-          totalDonations:   d.financials?.totalDonations + d.financials?.totalAdoptionFees || 0,
+          totalDonations:   d.financials?.totalDonations || 0,
           upcomingEvents:   d.pipeline?.activeFosters || 0,
         });
 

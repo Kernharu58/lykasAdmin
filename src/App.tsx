@@ -1,31 +1,42 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { AuthProvider } from './context/AuthContext';
-import { ToastProvider } from './context/ToastContext';
-import ProtectedRoute from './components/layout/ProtectedRoute';
-import ErrorBoundary from './components/ErrorBoundary';
-import Sidebar from './components/layout/Sidebar';
-import Navbar from './components/layout/Navbar';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import ManagePets from './pages/ManagePets';
-import Shifts from './pages/Shifts';
-import Chat from './pages/Chat';
-import Settings from './pages/Settings';
-import Donations from './pages/Donations';
-import Adoptions from './pages/Adoptions';
-import Accounts from './pages/Accounts';
-import AuditLogs from './pages/AuditLogs';
-import Events from './pages/Events';
-import Fosters from './pages/Fosters';
-import Adopters from './pages/Adopters';
-import Health from './pages/Health';
-import Reports from './pages/Reports';
-import Monitoring from './pages/Monitoring';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useState } from "react";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
+import ProtectedRoute from "./components/layout/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
+import Sidebar from "./components/layout/Sidebar";
+import Navbar from "./components/layout/Navbar";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import ManagePets from "./pages/ManagePets";
+import Shifts from "./pages/Shifts";
+import Chat from "./pages/Chat";
+import Settings from "./pages/Settings";
+import Donations from "./pages/Donations";
+import Adoptions from "./pages/Adoptions";
+import Accounts from "./pages/Accounts";
+import AuditLogs from "./pages/AuditLogs";
+import Events from "./pages/Events";
+import Fosters from "./pages/Fosters";
+import Adopters from "./pages/Adopters";
+import Health from "./pages/Health";
+import Reports from "./pages/Reports";
+import Monitoring from "./pages/Monitoring";
+// ── New pages ──────────────────────────────────────────────────────────────────
+import NotificationsAdmin from "./pages/NotificationsAdmin";
+import StaffManagement from "./pages/StaffManagement";
+import Volunteer from "./pages/Volunteer";
+import PetGallery from "./pages/PetGallery";
+import PetDetails from "./pages/PetDetails";
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,74 +50,139 @@ function AdminLayout() {
 
         <div className="flex-1 overflow-y-auto w-full">
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-xs font-bold text-amber-900 sm:hidden">
-            Admin workflows are optimized for desktop; mobile access is best for quick review.
+            Admin workflows are optimized for desktop; mobile access is best for
+            quick review.
           </div>
 
           <Routes>
-            {/* Public admin routes (accessible by all authenticated staff) */}
+            {/* ── Public admin routes (all authenticated staff) ─────────────── */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/pets" element={<ManagePets />} />
+            <Route path="/pets/:id" element={<PetDetails />} />
+            <Route path="/gallery" element={<PetGallery />} />
             <Route path="/events" element={<Events />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/settings" element={<Settings />} />
 
-            {/* FIX (Warning #1): Restrict adoption/foster actions to admin+ only; staff read-only */}
-            <Route path="/adoptions" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <Adoptions />
-              </ProtectedRoute>
-            } />
-            <Route path="/fosters" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <Fosters />
-              </ProtectedRoute>
-            } />
-            <Route path="/adopters" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <Adopters />
-              </ProtectedRoute>
-            } />
+            {/* ── Admin+ only ───────────────────────────────────────────────── */}
+            <Route
+              path="/adoptions"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Adoptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fosters"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Fosters />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adopters"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Adopters />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/donations"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Donations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* FIX (Warning #1): Restrict financial data to admin+ */}
-            <Route path="/donations" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <Donations />
-              </ProtectedRoute>
-            } />
-            <Route path="/reports" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <Reports />
-              </ProtectedRoute>
-            } />
+            {/* ── Staff + Admin ────────────────────────────────────────────── */}
+            <Route
+              path="/shifts"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
+                  <Shifts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/volunteers"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
+                  <Volunteer />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/health"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
+                  <Health />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/monitoring"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
+                  <Monitoring />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* FIX (Warning #1): Shifts and health accessible to all staff */}
-            <Route path="/shifts" element={
-              <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
-                <Shifts />
-              </ProtectedRoute>
-            } />
-            <Route path="/health" element={
-              <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
-                <Health />
-              </ProtectedRoute>
-            } />
-            <Route path="/monitoring" element={
-              <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
-                <Monitoring />
-              </ProtectedRoute>
-            } />
+            {/* ── Notifications (admin+) ───────────────────────────────────── */}
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <NotificationsAdmin />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Existing super-admin-only routes */}
-            <Route path="/accounts" element={
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <Accounts />
-              </ProtectedRoute>
-            } />
-            <Route path="/audit-logs" element={
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <AuditLogs />
-              </ProtectedRoute>
-            } />
+            {/* ── Super admin / admin ──────────────────────────────────────── */}
+            <Route
+              path="/staff"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <StaffManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/accounts"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Accounts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/audit-logs"
+              element={
+                <ProtectedRoute allowedRoles={["super_admin"]}>
+                  <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -117,7 +193,7 @@ function AdminLayout() {
 }
 
 export default function App() {
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
@@ -133,7 +209,9 @@ export default function App() {
                 <Route
                   path="/*"
                   element={
-                    <ProtectedRoute allowedRoles={['admin', 'staff', 'super_admin']}>
+                    <ProtectedRoute
+                      allowedRoles={["admin", "staff", "super_admin"]}
+                    >
                       <AdminLayout />
                     </ProtectedRoute>
                   }
