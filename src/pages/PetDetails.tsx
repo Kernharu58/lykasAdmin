@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Calendar,
   Clipboard,
-  Edit,
   HeartPulse,
   PawPrint,
   Syringe,
@@ -12,8 +11,7 @@ import {
   Weight,
 } from "lucide-react";
 import api from "../services/api";
-import { useToast } from "../context/ToastContext";
-import { Badge, Card, SectionHeader } from "../components/ui/SharedUI";
+import { Badge, Card } from "../components/ui/SharedUI";
 import { LoadingState, ErrorState } from "../components/ui/StateDisplays";
 
 interface Pet {
@@ -69,7 +67,6 @@ function statusVariant(s: string): "success" | "warning" | "info" | "default" {
 export default function PetDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addToast } = useToast();
 
   const [pet, setPet] = useState<Pet | null>(null);
   const [vaccinations, setVacc] = useState<Vaccination[]>([]);

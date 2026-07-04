@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
-import { PawPrint, HeartHandshake, Users, Activity, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
-import api from '../services/api';
-import { PageHeader, Card, SectionHeader, StatCard } from '../components/ui/SharedUI';
+import { useState, useEffect } from "react";
+import {
+  PawPrint,
+  HeartHandshake,
+  Users,
+  Activity,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
+import api from "../services/api";
+import { PageHeader, Card, SectionHeader } from "../components/ui/SharedUI";
 
 interface RecentActivity {
   id: string;
@@ -9,16 +17,16 @@ interface RecentActivity {
   title: string;
   description: string;
   timestamp: string;
-  type: 'adoption' | 'volunteer' | 'chat' | 'foster';
+  type: "adoption" | "volunteer" | "chat" | "foster";
 }
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ 
-    availablePets: 0, 
-    pendingAdoptions: 0, 
+  const [stats, setStats] = useState({
+    availablePets: 0,
+    pendingAdoptions: 0,
     activeVolunteers: 0,
     totalDonations: 0,
-    upcomingEvents: 0
+    upcomingEvents: 0,
   });
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
@@ -26,53 +34,65 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const res = await api.get('/dashboard');
+        const res = await api.get("/dashboard");
         const d = res.data;
 
         setStats({
-          availablePets:    d.pets?.available        || 0,
-          pendingAdoptions: d.applications?.pending  || 0,
-          activeVolunteers: d.volunteers?.active     || 0,
-          totalDonations:   d.financials?.totalDonations || 0,
-          upcomingEvents:   d.pipeline?.activeFosters || 0,
+          availablePets: d.pets?.available || 0,
+          pendingAdoptions: d.applications?.pending || 0,
+          activeVolunteers: d.volunteers?.active || 0,
+          totalDonations: d.financials?.totalDonations || 0,
+          upcomingEvents: d.pipeline?.activeFosters || 0,
         });
 
         // Map real recent applications to activity items
-        const appActivity: RecentActivity[] = (d.recent?.applications || []).slice(0, 2).map((a: any) => ({
-          id: a._id,
-          icon: <CheckCircle2 size={20} className="text-emerald-600" />,
-          title: `Application ${a.status}`,
-          description: `${a.applicant?.displayName || 'Applicant'} applied for ${a.pet?.name || 'a pet'}`,
-          timestamp: new Date(a.createdAt).toLocaleDateString(),
-          type: 'adoption' as const,
-        }));
+        const appActivity: RecentActivity[] = (d.recent?.applications || [])
+          .slice(0, 2)
+          .map((a: any) => ({
+            id: a._id,
+            icon: <CheckCircle2 size={20} className="text-emerald-600" />,
+            title: `Application ${a.status}`,
+            description: `${a.applicant?.displayName || "Applicant"} applied for ${a.pet?.name || "a pet"}`,
+            timestamp: new Date(a.createdAt).toLocaleDateString(),
+            type: "adoption" as const,
+          }));
 
-        const payActivity: RecentActivity[] = (d.recent?.payments || []).slice(0, 2).map((p: any) => ({
-          id: p._id,
-          icon: <TrendingUp size={20} className="text-purple-600" />,
-          title: `Payment received`,
-          description: `${p.paidBy?.displayName || 'Donor'} — ₱${((p.amount || 0) / 100).toLocaleString()}`,
-          timestamp: p.paidAt ? new Date(p.paidAt).toLocaleDateString() : '',
-          type: 'adoption' as const,
-        }));
+        const payActivity: RecentActivity[] = (d.recent?.payments || [])
+          .slice(0, 2)
+          .map((p: any) => ({
+            id: p._id,
+            icon: <TrendingUp size={20} className="text-purple-600" />,
+            title: `Payment received`,
+            description: `${p.paidBy?.displayName || "Donor"} — ₱${((p.amount || 0) / 100).toLocaleString()}`,
+            timestamp: p.paidAt ? new Date(p.paidAt).toLocaleDateString() : "",
+            type: "adoption" as const,
+          }));
 
-        const emergencyActivity: RecentActivity[] = (d.recent?.emergencyReports || []).slice(0, 1).map((r: any) => ({
-          id: r._id,
-          icon: <AlertCircle size={20} className="text-amber-600" />,
-          title: 'Emergency Report',
-          description: `${r.type?.replace(/_/g, ' ')} — ${r.location}`,
-          timestamp: new Date(r.createdAt).toLocaleDateString(),
-          type: 'foster' as const,
-        }));
+        const emergencyActivity: RecentActivity[] = (
+          d.recent?.emergencyReports || []
+        )
+          .slice(0, 1)
+          .map((r: any) => ({
+            id: r._id,
+            icon: <AlertCircle size={20} className="text-amber-600" />,
+            title: "Emergency Report",
+            description: `${r.type?.replace(/_/g, " ")} — ${r.location}`,
+            timestamp: new Date(r.createdAt).toLocaleDateString(),
+            type: "foster" as const,
+          }));
 
-        setRecentActivity([...appActivity, ...payActivity, ...emergencyActivity]);
+        setRecentActivity([
+          ...appActivity,
+          ...payActivity,
+          ...emergencyActivity,
+        ]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchDashboardData();
   }, []);
 
@@ -87,9 +107,9 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-      <PageHeader 
-        title="Dashboard Overview" 
-        description="Real-time metrics and system status for the shelter." 
+      <PageHeader
+        title="Dashboard Overview"
+        description="Real-time metrics and system status for the shelter."
       />
 
       {/* KPI Cards */}
@@ -102,8 +122,12 @@ export default function Dashboard() {
             <PawPrint size={22} className="text-emerald-600" />
           </div>
           <div>
-            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">Available Pets</h3>
-            <p className="text-2xl font-extrabold text-slate-800">{stats.availablePets}</p>
+            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">
+              Available Pets
+            </h3>
+            <p className="text-2xl font-extrabold text-slate-800">
+              {stats.availablePets}
+            </p>
           </div>
         </Card>
 
@@ -115,8 +139,12 @@ export default function Dashboard() {
             <HeartHandshake size={22} className="text-amber-600" />
           </div>
           <div>
-            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">Pending Adoptions</h3>
-            <p className="text-2xl font-extrabold text-slate-800">{stats.pendingAdoptions}</p>
+            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">
+              Pending Adoptions
+            </h3>
+            <p className="text-2xl font-extrabold text-slate-800">
+              {stats.pendingAdoptions}
+            </p>
           </div>
         </Card>
 
@@ -128,8 +156,12 @@ export default function Dashboard() {
             <Users size={22} className="text-blue-600" />
           </div>
           <div>
-            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">Active Volunteers</h3>
-            <p className="text-2xl font-extrabold text-slate-800">{stats.activeVolunteers}</p>
+            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">
+              Active Volunteers
+            </h3>
+            <p className="text-2xl font-extrabold text-slate-800">
+              {stats.activeVolunteers}
+            </p>
           </div>
         </Card>
 
@@ -141,8 +173,15 @@ export default function Dashboard() {
             <TrendingUp size={22} className="text-purple-600" />
           </div>
           <div>
-            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">Total Donations</h3>
-            <p className="text-2xl font-extrabold text-slate-800">₱{stats.totalDonations > 0 ? (stats.totalDonations / 1000).toFixed(0) + 'K' : '—'}</p>
+            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">
+              Total Donations
+            </h3>
+            <p className="text-2xl font-extrabold text-slate-800">
+              ₱
+              {stats.totalDonations > 0
+                ? (stats.totalDonations / 1000).toFixed(0) + "K"
+                : "—"}
+            </p>
           </div>
         </Card>
 
@@ -154,8 +193,12 @@ export default function Dashboard() {
             <Activity size={22} className="text-rose-600" />
           </div>
           <div>
-            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">Upcoming Events</h3>
-            <p className="text-2xl font-extrabold text-slate-800">{stats.upcomingEvents}</p>
+            <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider mb-0.5">
+              Upcoming Events
+            </h3>
+            <p className="text-2xl font-extrabold text-slate-800">
+              {stats.upcomingEvents}
+            </p>
           </div>
         </Card>
       </div>
@@ -172,11 +215,17 @@ export default function Dashboard() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
               </span>
-              <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">System Online</h2>
+              <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">
+                System Online
+              </h2>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mb-2">Mobile App Connected</h3>
+            <h3 className="text-2xl sm:text-3xl font-extrabold mb-2">
+              Mobile App Connected
+            </h3>
             <p className="text-slate-300 leading-relaxed text-sm sm:text-base">
-              The CarePaws app is actively routing applications and messages to this dashboard. Keep an eye on Live Chat for incoming community questions!
+              The CarePaws app is actively routing applications and messages to
+              this dashboard. Keep an eye on Live Chat for incoming community
+              questions!
             </p>
           </div>
           <div className="text-right">
@@ -189,18 +238,28 @@ export default function Dashboard() {
       {/* Recent Activity */}
       <Card noPadding>
         <div className="p-5 border-b border-slate-100 bg-slate-50/70">
-          <SectionHeader title="Recent Activity" description="Latest shelter updates and events" />
+          <SectionHeader
+            title="Recent Activity"
+            description="Latest shelter updates and events"
+          />
         </div>
         <div className="divide-y divide-slate-100">
           {recentActivity.map((activity) => (
-            <div key={activity.id} className="p-5 hover:bg-slate-50 transition-colors flex items-start gap-4">
-              <div className="mt-1">
-                {activity.icon}
-              </div>
+            <div
+              key={activity.id}
+              className="p-5 hover:bg-slate-50 transition-colors flex items-start gap-4"
+            >
+              <div className="mt-1">{activity.icon}</div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-slate-800">{activity.title}</h4>
-                <p className="text-sm text-slate-600 mt-1">{activity.description}</p>
-                <p className="text-xs text-slate-400 mt-2">{activity.timestamp}</p>
+                <h4 className="font-semibold text-slate-800">
+                  {activity.title}
+                </h4>
+                <p className="text-sm text-slate-600 mt-1">
+                  {activity.description}
+                </p>
+                <p className="text-xs text-slate-400 mt-2">
+                  {activity.timestamp}
+                </p>
               </div>
             </div>
           ))}

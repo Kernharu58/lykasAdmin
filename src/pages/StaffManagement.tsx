@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Lock,
   RefreshCcw,
   Search,
   ShieldCheck,
@@ -84,7 +83,6 @@ export default function StaffManagement() {
   const [roleFilter, setRoleFilter] = useState<StaffRole | "all">("all");
   const [selected, setSelected] = useState<StaffUser | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingRole, setPendingRole] = useState<StaffRole>("staff");
   const [confirmState, setConfirmState] = useState<ConfirmState>({
     isOpen: false,
     action: "",
@@ -327,10 +325,7 @@ export default function StaffManagement() {
               {filtered.map((u) => (
                 <button
                   key={u._id}
-                  onClick={() => {
-                    setSelected(u);
-                    setPendingRole((u.role as StaffRole) || "staff");
-                  }}
+                  onClick={() => setSelected(u)}
                   className={`w-full text-left px-5 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors ${selected?._id === u._id ? "bg-emerald-50 border-l-4 border-emerald-500" : ""}`}
                 >
                   <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 overflow-hidden">
@@ -444,7 +439,6 @@ export default function StaffManagement() {
                       <button
                         key={opt.value}
                         onClick={() => {
-                          setPendingRole(opt.value);
                           setConfirmState({
                             isOpen: true,
                             action: "role",
