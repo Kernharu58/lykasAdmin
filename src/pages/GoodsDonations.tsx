@@ -19,9 +19,7 @@ import {
   Clock,
   CheckCircle,
   Truck,
-  XCircle,
   Search,
-  ChevronDown,
   RefreshCw,
   Eye,
   X,
@@ -116,7 +114,7 @@ function StatusModal({
         status: newStatus,
         staffNote,
       });
-      addToast("Status updated successfully", "success");
+      addToast("success", "Status updated successfully");
       onUpdated();
       onClose();
     } catch (e: any) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Mail, MessageSquare, User as UserIcon, XCircle, Clock, Filter, StickyNote, Send } from 'lucide-react';
 import api from '../services/api';

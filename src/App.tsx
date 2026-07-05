@@ -22,7 +22,6 @@ import Shifts from "./pages/Shifts";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import Donations from "./pages/Donations";
-import GoodsDonations from "./pages/GoodsDonations"; {/* ✅ FIX Bug 4 */}
 import Adoptions from "./pages/Adoptions";
 import Accounts from "./pages/Accounts";
 import AuditLogs from "./pages/AuditLogs";
@@ -32,6 +31,7 @@ import Adopters from "./pages/Adopters";
 import Health from "./pages/Health";
 import Reports from "./pages/Reports";
 import Monitoring from "./pages/Monitoring";
+// ── New pages ──────────────────────────────────────────────────────────────────
 import NotificationsAdmin from "./pages/NotificationsAdmin";
 import StaffManagement from "./pages/StaffManagement";
 import Volunteer from "./pages/Volunteer";
@@ -97,15 +97,6 @@ function AdminLayout() {
                 </ProtectedRoute>
               }
             />
-            {/* ✅ FIX Bug 4 — Goods Donations route */}
-            <Route
-              path="/goods-donations"
-              element={
-                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-                  <GoodsDonations />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/reports"
               element={
@@ -115,11 +106,13 @@ function AdminLayout() {
               }
             />
 
-            {/* ── Staff + Admin ─────────────────────────────────────────────── */}
+            {/* ── Staff + Admin ────────────────────────────────────────────── */}
             <Route
               path="/shifts"
               element={
-                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
                   <Shifts />
                 </ProtectedRoute>
               }
@@ -127,7 +120,9 @@ function AdminLayout() {
             <Route
               path="/volunteers"
               element={
-                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
                   <Volunteer />
                 </ProtectedRoute>
               }
@@ -135,7 +130,9 @@ function AdminLayout() {
             <Route
               path="/health"
               element={
-                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
                   <Health />
                 </ProtectedRoute>
               }
@@ -143,7 +140,9 @@ function AdminLayout() {
             <Route
               path="/monitoring"
               element={
-                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
                   <Monitoring />
                 </ProtectedRoute>
               }
@@ -210,7 +209,9 @@ export default function App() {
                 <Route
                   path="/*"
                   element={
-                    <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                    <ProtectedRoute
+                      allowedRoles={["admin", "staff", "super_admin"]}
+                    >
                       <AdminLayout />
                     </ProtectedRoute>
                   }
