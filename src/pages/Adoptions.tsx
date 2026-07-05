@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Mail, MessageSquare, User as UserIcon, XCircle, Clock, Filter } from 'lucide-react';
+import { CheckCircle, Mail, MessageSquare, User as UserIcon, XCircle, Clock, Filter, StickyNote, Send } from 'lucide-react';
 import api from '../services/api';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/StateDisplays';
@@ -64,11 +64,34 @@ export default function Adoptions() {
     userName: '',
   });
 
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [notes, setNotes] = useState<any[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
 
   const resetConfirmAction = () => {
     setConfirmAction({ isOpen: false, type: '', applicationId: '', petName: '', userName: '' });
+  };
+
+  const loadNotes = async (appId: string) => {
+    setNotesLoading(true);
+    setSelectedAppId(appId);
+    try {
+      const res = await api.get(`/applications/${appId}/notes`);
+      setNotes(res.data.notes || []);
+    } catch { setNotes([]); } finally { setNotesLoading(false); }
+  };
+
+  const submitNote = async (appId: string) => {
+    if (!noteText.trim()) return;
+    try {
+      const res = await api.post(`/applications/${appId}/notes`, { text: noteText.trim() });
+      setNotes(res.data.notes || []);
+      setNoteText('');
+      addToast('success', 'Internal note added.');
+    } catch { addToast('error', 'Failed to add note.'); }
   };
 
   const fetchApplications = async (status: AppStatus | 'all' = activeTab) => {
@@ -205,6 +228,54 @@ export default function Adoptions() {
                           Message Applicant
                         </button>
                       )}
+                      {/* Internal Notes */}
+                      <div className="mt-4">
+                        <button
+                          onClick={() => selectedAppId === application._id ? setSelectedAppId(null) : loadNotes(application._id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-amber-700 transition-colors"
+                        >
+                          <StickyNote size={14} />
+                          {selectedAppId === application._id ? "Hide" : "Coordinator Notes"}
+                          {notes.length > 0 && selectedAppId === application._id && (
+                            <span className="ml-1 bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full text-xs">{notes.length}</span>
+                          )}
+                        </button>
+                        {selectedAppId === application._id && (
+                          <div className="mt-3 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">Internal Notes (hidden from applicant)</p>
+                            {notesLoading ? (
+                              <p className="text-slate-400 text-xs">Loading...</p>
+                            ) : notes.length === 0 ? (
+                              <p className="text-slate-400 text-xs italic">No notes yet. Add the first one below.</p>
+                            ) : (
+                              <div className="space-y-2 mb-3">
+                                {notes.map((note: any, i: number) => (
+                                  <div key={i} className="bg-white rounded-lg p-2 border border-amber-100">
+                                    <p className="text-slate-700 text-xs">{note.text}</p>
+                                    <p className="text-slate-400 text-xs mt-1">{note.author?.displayName || "Staff"} &bull; {new Date(note.createdAt).toLocaleDateString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <div className="flex gap-2 mt-2">
+                              <input
+                                type="text"
+                                value={noteText}
+                                onChange={e => setNoteText(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') submitNote(application._id); }}
+                                placeholder="Add a coordinator note..."
+                                className="flex-1 text-xs border border-amber-200 rounded-lg px-3 py-2 focus:outline-none focus:border-amber-400 bg-white"
+                              />
+                              <button
+                                onClick={() => submitNote(application._id)}
+                                className="flex items-center gap-1 px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition-colors"
+                              >
+                                <Send size={12} /> Add
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex-1">
