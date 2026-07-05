@@ -23,6 +23,7 @@ import {
   Images,
   UserCog,
   Handshake,
+  Package,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -102,6 +103,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: "Donations",
       path: "/donations",
       icon: <HeartHandshake size={20} />,
+      section: "Finance",
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: "Goods Donations",
+      path: "/goods-donations",
+      icon: <Package size={20} />,
       section: "Finance",
       roles: ["admin", "super_admin"],
     },
@@ -238,7 +246,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Nav */}
         <nav className="flex-1 py-5 px-4 overflow-y-auto custom-scrollbar">
           {filteredNavItems.map((item, index) => {
-            // Active match: exact for '/', prefix for others
             const isActive =
               item.path === "/"
                 ? location.pathname === "/"
