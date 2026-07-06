@@ -47,6 +47,11 @@ const roleOptions: { value: UserRole; label: string }[] = [
   { value: 'user', label: 'Mobile User' },
   { value: 'staff', label: 'Shelter Staff' },
   { value: 'admin', label: 'Admin' },
+  // BUG FIX: super_admin was missing here, so the existing isSuperAdmin filter
+  // below (roleChoices) had nothing to actually restrict — a super admin could
+  // never grant super_admin from this screen even though the code intended to
+  // allow it. Kept restricted via roleChoices so non-super-admins still can't see it.
+  { value: 'super_admin', label: 'Super Admin' },
 ];
 
 function getStatusVariant(status: UserStatus | undefined) {
