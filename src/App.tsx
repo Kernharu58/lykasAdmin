@@ -37,6 +37,16 @@ import StaffManagement from "./pages/StaffManagement";
 import Volunteer from "./pages/Volunteer";
 import PetGallery from "./pages/PetGallery";
 import PetDetails from "./pages/PetDetails";
+import AdoptionScheduling from "./pages/AdoptionScheduling";
+import PaymentsAdmin from "./pages/PaymentsAdmin";
+import UserVerification from "./pages/UserVerification";
+import EmergencyReports from "./pages/EmergencyReports";
+import DocumentReview from "./pages/DocumentReview";
+import Analytics from "./pages/Analytics";
+import ContentManagement from "./pages/ContentManagement";
+import ShelterManagement from "./pages/ShelterManagement";
+import Inventory from "./pages/Inventory";
+import FeedbackReviews from "./pages/FeedbackReviews";
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -102,6 +112,46 @@ function AdminLayout() {
               element={
                 <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
                   <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adoption-scheduling"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <AdoptionScheduling />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/verification"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <UserVerification />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <DocumentReview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/emergency-reports"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <EmergencyReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payments"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <PaymentsAdmin />
                 </ProtectedRoute>
               }
             />
@@ -180,6 +230,56 @@ function AdminLayout() {
               element={
                 <ProtectedRoute allowedRoles={["super_admin"]}>
                   <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Analytics (admin+, staff read-only via controller role check) ── */}
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Content Management (admin+) ─────────────────────────────────── */}
+            <Route
+              path="/content"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <ContentManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Shelter Management (admin+) ─────────────────────────────────── */}
+            <Route
+              path="/shelters"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <ShelterManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Inventory (admin+) ──────────────────────────────────────────── */}
+            <Route
+              path="/inventory"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <Inventory />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Feedback & Reviews (admin+) ─────────────────────────────────── */}
+            <Route
+              path="/feedback"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <FeedbackReviews />
                 </ProtectedRoute>
               }
             />
