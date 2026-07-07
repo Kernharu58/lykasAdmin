@@ -235,6 +235,12 @@ export default function StaffManagement() {
   }, [confirmState]);
 
   const isSelf = (u: StaffUser) => u._id === currentUser?._id;
+  // SECURITY FIX (Critical): only a super_admin may change the role of, or take
+  // access actions against, an account that is already super_admin. Without this,
+  // any plain "admin" could promote a colluding account to super_admin (privilege
+  // escalation) or lock/suspend a super_admin out of the portal.
+  const isSuperAdmin = currentUser?.role === "super_admin";
+  const canManageTarget = (u: StaffUser) => isSuperAdmin || u.role !== "super_admin";
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
@@ -429,13 +435,15 @@ export default function StaffManagement() {
               </div>
 
               {/* Change Role */}
-              {!isSelf(selected) && (
+              {!isSelf(selected) && canManageTarget(selected) && (
                 <div className="mb-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">
                     Change Role
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {ROLE_OPTIONS.map((opt) => (
+                    {ROLE_OPTIONS.filter(
+                      (opt) => isSuperAdmin || opt.value !== "super_admin",
+                    ).map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => {
@@ -455,9 +463,14 @@ export default function StaffManagement() {
                   </div>
                 </div>
               )}
+              {!isSelf(selected) && !canManageTarget(selected) && (
+                <p className="text-xs text-slate-400 italic mb-4">
+                  This account requires super admin privileges to modify.
+                </p>
+              )}
 
               {/* Status Actions */}
-              {!isSelf(selected) && (
+              {!isSelf(selected) && canManageTarget(selected) && (
                 <div className="mb-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">
                     Access Control
