@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-<<<<<<< HEAD
 import { Building2, PlusCircle, MapPin, Phone, Mail, Users2, Trash2, Edit3, Search } from 'lucide-react';
-=======
-import { Building2, PlusCircle, MapPin, Phone, Mail, Users2, Trash2, Edit3 } from 'lucide-react';
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
 import { Badge, Card, PageHeader, SectionHeader, StatCard, Toolbar } from '../components/ui/SharedUI';
 import { LoadingState, ErrorState, EmptyState } from '../components/ui/StateDisplays';
 import { useToast } from '../context/ToastContext';
@@ -56,7 +52,6 @@ export default function ShelterManagement() {
   const [submitting, setSubmitting] = useState(false);
   const { addToast } = useToast();
 
-<<<<<<< HEAD
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<ShelterType | 'all'>('all');
 
@@ -72,8 +67,6 @@ export default function ShelterManagement() {
     });
   }, [shelters, searchTerm, typeFilter]);
 
-=======
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
   const fetchData = async () => {
     try {
       setLoading(true); setError(null);
@@ -165,7 +158,6 @@ export default function ShelterManagement() {
         shelters.length === 0 ? (
           <Card><EmptyState title="No facilities yet" message="Add your first shelter, foster hub, or clinic to start tracking capacity." icon={<Building2 size={28} />} /></Card>
         ) : (
-<<<<<<< HEAD
           <Card noPadding className="mb-5">
             <Toolbar>
               <SectionHeader title="Facilities" description={`${filteredShelters.length} of ${shelters.length} shown`} />
@@ -246,53 +238,6 @@ export default function ShelterManagement() {
               </div>
             )}
           </Card>
-=======
-          <div className="grid md:grid-cols-2 gap-5">
-            {shelters.map(s => (
-              <Card key={s._id} className="flex flex-col gap-4">
-                <div className="flex justify-between items-start gap-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-slate-800">{s.name}</h3>
-                      <Badge variant={STATUS_VARIANT[s.status]} className="capitalize">{s.status.replace(/_/g, ' ')}</Badge>
-                    </div>
-                    <p className="text-xs text-slate-500 flex items-center gap-1.5"><MapPin size={12} />{s.address}</p>
-                    <p className="text-xs text-slate-400 mt-1">{typeLabel(s.type)}</p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => openEdit(s)} className="text-slate-400 hover:text-emerald-600"><Edit3 size={16} /></button>
-                    <button onClick={() => handleDelete(s._id)} className="text-slate-400 hover:text-rose-600"><Trash2 size={16} /></button>
-                  </div>
-                </div>
-
-                {(s.contactPerson || s.contactPhone || s.contactEmail) && (
-                  <div className="text-xs text-slate-500 space-y-1">
-                    {s.contactPerson && <p>{s.contactPerson}</p>}
-                    {s.contactPhone && <p className="flex items-center gap-1.5"><Phone size={11} />{s.contactPhone}</p>}
-                    {s.contactEmail && <p className="flex items-center gap-1.5"><Mail size={11} />{s.contactEmail}</p>}
-                  </div>
-                )}
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="font-semibold text-slate-600">Occupancy</span>
-                    <span className="text-slate-500">{s.currentOccupancy} / {s.capacity}</span>
-                  </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-2.5">
-                    <div
-                      className={`h-full rounded-full ${s.currentOccupancy / (s.capacity || 1) >= 0.9 ? 'bg-rose-500' : 'bg-emerald-500'}`}
-                      style={{ width: `${Math.min(100, (s.currentOccupancy / (s.capacity || 1)) * 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleOccupancyChange(s, s.currentOccupancy - 1)} className="flex-1 text-xs font-semibold border border-slate-200 rounded-lg py-1.5 hover:bg-slate-50">− Occupant</button>
-                    <button onClick={() => handleOccupancyChange(s, s.currentOccupancy + 1)} className="flex-1 text-xs font-semibold border border-slate-200 rounded-lg py-1.5 hover:bg-slate-50">+ Occupant</button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
         )
       )}
 

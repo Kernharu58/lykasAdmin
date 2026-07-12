@@ -34,6 +34,7 @@ import {
   Building2,
   Boxes,
   MessageSquareText,
+  ShieldAlert,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -91,6 +92,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: "Adoption Scheduling",
       path: "/adoption-scheduling",
       icon: <CalendarClock size={20} />,
+      section: "Main",
+    },
+    {
+      name: "Risk Assessments",
+      path: "/risk-assessments",
+      icon: <ShieldAlert size={20} />,
       section: "Main",
     },
     {

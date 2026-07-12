@@ -47,6 +47,8 @@ import ContentManagement from "./pages/ContentManagement";
 import ShelterManagement from "./pages/ShelterManagement";
 import Inventory from "./pages/Inventory";
 import FeedbackReviews from "./pages/FeedbackReviews";
+import GoodsDonations from "./pages/GoodsDonations";
+import RiskAssessments from "./pages/RiskAssessments";
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -104,6 +106,22 @@ function AdminLayout() {
               element={
                 <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
                   <Donations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/goods-donations"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <GoodsDonations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/risk-assessments"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <RiskAssessments />
                 </ProtectedRoute>
               }
             />

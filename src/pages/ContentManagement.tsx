@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-<<<<<<< HEAD
 import type { JSX } from 'react';
-=======
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
 import { FileText, HelpCircle, PlusCircle, Trash2, Edit3, Megaphone, BookOpen } from 'lucide-react';
 import { Badge, Card, PageHeader, SectionHeader, Toolbar } from '../components/ui/SharedUI';
 import { LoadingState, ErrorState, EmptyState } from '../components/ui/StateDisplays';
