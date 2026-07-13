@@ -16,6 +16,8 @@ const searchableRoutes = [
   { label: 'Volunteers', path: '/shifts', keywords: 'shifts volunteers appointments' },
   { label: 'Events', path: '/events', keywords: 'calendar rsvp event drive' },
   { label: 'Donations', path: '/donations', keywords: 'payments donors finance' },
+  { label: 'Goods Donations', path: '/goods-donations', keywords: 'in-kind goods supplies donors' },
+  { label: 'Risk Assessments', path: '/risk-assessments', keywords: 'risk score recommendation adoption readiness' },
   { label: 'Health', path: '/health', keywords: 'baby book vaccination medical' },
   { label: 'Reports', path: '/reports', keywords: 'analytics exports charts' },
   { label: 'Live Chat', path: '/chat', keywords: 'messages conversations support' },

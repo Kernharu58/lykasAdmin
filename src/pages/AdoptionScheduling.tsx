@@ -188,20 +188,12 @@ export default function AdoptionScheduling() {
 
       {!loading && !error && (
         <Card noPadding>
-<<<<<<< HEAD
           <Toolbar>
-=======
-          <div className="p-5 border-b border-slate-100 bg-slate-50/60">
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
             <SectionHeader
               title={tab === 'interviews' ? 'Interviews' : 'Home Visits'}
               description="Failing an interview or home visit automatically rejects the application and frees the pet."
             />
-<<<<<<< HEAD
           </Toolbar>
-=======
-          </div>
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
 
           {list.length === 0 ? (
             <div className="p-6">

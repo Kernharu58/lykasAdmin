@@ -106,11 +106,7 @@ export default function Analytics() {
         description="A bird's-eye view of the whole system. For deep-dive exportable breakdowns, see Reports."
       />
 
-<<<<<<< HEAD
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-=======
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
         <StatCard icon={<PawPrint size={22} />} label="Pets Available" value={overview.pets.available} tone="emerald" />
         <StatCard icon={<Users size={22} />} label="Total Adopters" value={overview.users.total} tone="blue" />
         <StatCard icon={<ClipboardList size={22} />} label="Pending Applications" value={overview.adoptions.pending} tone="amber" />
@@ -120,15 +116,12 @@ export default function Analytics() {
           value={`₱${overview.revenue.thisMonth.toLocaleString()}`}
           tone={overview.revenue.growthPercent >= 0 ? 'emerald' : 'rose'}
         />
-<<<<<<< HEAD
         <StatCard
           icon={<Wallet size={22} />}
           label="Revenue (last month)"
           value={`₱${overview.revenue.lastMonth.toLocaleString()}`}
           tone="slate"
         />
-=======
->>>>>>> 2b7d60c76aec6bd7c3f978897f9be8111398c9cb
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
