@@ -24,17 +24,8 @@ import {
   UserCog,
   Handshake,
   Package,
-  CalendarClock,
-  Wallet,
-  ShieldCheck,
-  Siren,
-  FileText,
-  LineChart,
-  BookOpen,
-  Building2,
-  Boxes,
-  MessageSquareText,
-  ShieldAlert,
+  Mic,
+  Home as HomeIcon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -77,6 +68,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       section: "Main",
     },
     {
+      name: "Interviews",
+      path: "/interviews",
+      icon: <Mic size={20} />,
+      section: "Main",
+    },
+    {
+      name: "Home Visits",
+      path: "/home-visits",
+      icon: <HomeIcon size={20} />,
+      section: "Main",
+    },
+    {
       name: "Fostering",
       path: "/fosters",
       icon: <HandHeart size={20} />,
@@ -86,30 +89,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: "Adopters & Risk",
       path: "/adopters",
       icon: <UserCheck size={20} />,
-      section: "Main",
-    },
-    {
-      name: "Adoption Scheduling",
-      path: "/adoption-scheduling",
-      icon: <CalendarClock size={20} />,
-      section: "Main",
-    },
-    {
-      name: "Risk Assessments",
-      path: "/risk-assessments",
-      icon: <ShieldAlert size={20} />,
-      section: "Main",
-    },
-    {
-      name: "User Verification",
-      path: "/verification",
-      icon: <ShieldCheck size={20} />,
-      section: "Main",
-    },
-    {
-      name: "Document Review",
-      path: "/documents",
-      icon: <FileText size={20} />,
       section: "Main",
     },
 
@@ -132,24 +111,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       icon: <CalendarDays size={20} />,
       section: "Operations",
     },
-    {
-      name: "Emergency Reports",
-      path: "/emergency-reports",
-      icon: <Siren size={20} />,
-      section: "Operations",
-    },
-    {
-      name: "Shelter Management",
-      path: "/shelters",
-      icon: <Building2 size={20} />,
-      section: "Operations",
-    },
-    {
-      name: "Inventory",
-      path: "/inventory",
-      icon: <Boxes size={20} />,
-      section: "Operations",
-    },
 
     // ── Finance ───────────────────────────────────────────────────────────────
     {
@@ -166,25 +127,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       section: "Finance",
       roles: ["admin", "super_admin"],
     },
-    {
-      name: "Payments",
-      path: "/payments",
-      icon: <Wallet size={20} />,
-      section: "Finance",
-      roles: ["admin", "super_admin"],
-    },
 
     // ── Insights ──────────────────────────────────────────────────────────────
     {
       name: "Health",
       path: "/health",
       icon: <HeartPulse size={20} />,
-      section: "Insights",
-    },
-    {
-      name: "Analytics",
-      path: "/analytics",
-      icon: <LineChart size={20} />,
       section: "Insights",
     },
     {
@@ -215,12 +163,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       icon: <MessageSquare size={20} />,
       section: "Comms",
     },
-    {
-      name: "Feedback & Reviews",
-      path: "/feedback",
-      icon: <MessageSquareText size={20} />,
-      section: "Comms",
-    },
 
     // ── Admin ─────────────────────────────────────────────────────────────────
     {
@@ -228,13 +170,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       path: "/settings",
       icon: <Settings size={20} />,
       section: "Admin",
-    },
-    {
-      name: "Content Management",
-      path: "/content",
-      icon: <BookOpen size={20} />,
-      section: "Admin",
-      roles: ["admin", "super_admin"],
     },
     {
       name: "Staff",

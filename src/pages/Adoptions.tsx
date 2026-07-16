@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Mail, MessageSquare, User as UserIcon, XCircle, Clock, Filter, StickyNote, Send } from 'lucide-react';
+import { CheckCircle, Mail, MessageSquare, User as UserIcon, XCircle, Clock, Filter, StickyNote, Send, Mic, Home as HomeIcon, AlertTriangle } from 'lucide-react';
 import api from '../services/api';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/StateDisplays';
@@ -68,6 +68,10 @@ export default function Adoptions() {
   const [noteText, setNoteText] = useState('');
   const [notes, setNotes] = useState<any[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
+  // FIX (Critical architectural gap): track interview/home-visit vetting gate
+  // per pending application, so staff can't approve straight from "pending"
+  // without an interview and home visit both having passed first.
+  const [vettingMap, setVettingMap] = useState<Record<string, { cleared: boolean; missing: string[] }>>({});
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -101,7 +105,27 @@ export default function Adoptions() {
       // FIX (Critical #3): Fetch based on selected tab, no longer hardcoded to pending
       const url = status === 'all' ? '/applications' : `/applications?status=${status}`;
       const response = await api.get(url);
-      setApplications(response.data.applications || response.data);
+      const apps: AdoptionRequest[] = response.data.applications || response.data;
+      setApplications(apps);
+
+      // FIX (Critical architectural gap): pull the vetting gate status for
+      // every pending application so the UI can disable Approve until an
+      // interview and home visit have both passed.
+      const pendingIds = apps.filter(a => a.status === 'pending').map(a => a._id);
+      if (pendingIds.length > 0) {
+        const results = await Promise.allSettled(
+          pendingIds.map(id => api.get(`/applications/${id}/vetting-status`))
+        );
+        setVettingMap(prev => {
+          const next = { ...prev };
+          results.forEach((r, i) => {
+            if (r.status === 'fulfilled') {
+              next[pendingIds[i]] = { cleared: r.value.data.cleared, missing: r.value.data.missing || [] };
+            }
+          });
+          return next;
+        });
+      }
     } catch (fetchError) {
       console.error('Error fetching adoptions:', fetchError);
       setError('Unable to load adoption applications right now. Please try again.');
@@ -124,9 +148,9 @@ export default function Adoptions() {
         addToast('warning', `Application for ${confirmAction.petName} was rejected.`);
       }
       fetchApplications(activeTab);
-    } catch (actionError) {
+    } catch (actionError: any) {
       console.error(`Error trying to ${confirmAction.type} adoption:`, actionError);
-      addToast('error', `Failed to ${confirmAction.type || 'update'} the adoption request.`);
+      addToast('error', actionError?.response?.data?.message || `Failed to ${confirmAction.type || 'update'} the adoption request.`);
     } finally {
       resetConfirmAction();
     }
@@ -298,38 +322,72 @@ export default function Adoptions() {
 
                   {/* FIX (Critical #4): Only show action buttons for pending applications */}
                   {application.status === 'pending' && (
-                    <div className="p-4 bg-slate-50/60 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
-                      <button
-                        onClick={() =>
-                          setConfirmAction({
-                            isOpen: true,
-                            type: 'reject',
-                            applicationId: application._id,
-                            petName: application.pet?.name || 'this pet',
-                            userName: application.applicant?.displayName || 'the applicant',
-                          })
-                        }
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-600 font-medium rounded-xl hover:bg-rose-50 hover:border-rose-100 transition-colors shadow-sm"
-                      >
-                        <XCircle size={18} />
-                        Reject
-                      </button>
-                      <button
-                        onClick={() =>
-                          setConfirmAction({
-                            isOpen: true,
-                            type: 'approve',
-                            applicationId: application._id,
-                            petName: application.pet?.name || 'this pet',
-                            userName: application.applicant?.displayName || 'the applicant',
-                          })
-                        }
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
-                      >
-                        <CheckCircle size={18} />
-                        Approve Application
-                      </button>
-                    </div>
+                    <>
+                      {/* FIX (Critical architectural gap): surface the interview/home-visit
+                          vetting stage so staff can't skip straight to approval */}
+                      {(() => {
+                        const gate = vettingMap[application._id];
+                        if (!gate || gate.cleared) return null;
+                        return (
+                          <div className="mx-4 mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-800">
+                            <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+                            <span>Still needs {gate.missing.join(' and ')} before this can be approved.</span>
+                          </div>
+                        );
+                      })()}
+                      <div className="p-4 bg-slate-50/60 flex flex-col-reverse sm:flex-row flex-wrap items-stretch sm:items-center justify-end gap-3">
+                        <button
+                          onClick={() => navigate('/interviews')}
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-sm"
+                        >
+                          <Mic size={16} />
+                          Schedule Interview
+                        </button>
+                        <button
+                          onClick={() => navigate('/home-visits')}
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-sm"
+                        >
+                          <HomeIcon size={16} />
+                          Schedule Home Visit
+                        </button>
+                        <button
+                          onClick={() =>
+                            setConfirmAction({
+                              isOpen: true,
+                              type: 'reject',
+                              applicationId: application._id,
+                              petName: application.pet?.name || 'this pet',
+                              userName: application.applicant?.displayName || 'the applicant',
+                            })
+                          }
+                          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-rose-600 font-medium rounded-xl hover:bg-rose-50 hover:border-rose-100 transition-colors shadow-sm"
+                        >
+                          <XCircle size={18} />
+                          Reject
+                        </button>
+                        <button
+                          disabled={!!vettingMap[application._id] && !vettingMap[application._id].cleared}
+                          title={
+                            vettingMap[application._id] && !vettingMap[application._id].cleared
+                              ? `Still needs ${vettingMap[application._id].missing.join(' and ')}`
+                              : undefined
+                          }
+                          onClick={() =>
+                            setConfirmAction({
+                              isOpen: true,
+                              type: 'approve',
+                              applicationId: application._id,
+                              petName: application.pet?.name || 'this pet',
+                              userName: application.applicant?.displayName || 'the applicant',
+                            })
+                          }
+                          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
+                        >
+                          <CheckCircle size={18} />
+                          Approve Application
+                        </button>
+                      </div>
+                    </>
                   )}
                 </div>
               ))}
