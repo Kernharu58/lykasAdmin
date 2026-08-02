@@ -26,6 +26,17 @@ import {
   Package,
   Mic,
   Home as HomeIcon,
+  ClipboardCheck,
+  CalendarClock,
+  ShieldCheck,
+  FileCheck,
+  Siren,
+  CreditCard,
+  FileText,
+  BadgeCheck,
+  Building2,
+  PieChart,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -53,6 +64,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: "Pets",
       path: "/pets",
       icon: <PawPrint size={20} />,
+      section: "Main",
+    },
+    {
+      name: "Pet Management",
+      path: "/pet-management",
+      icon: <ClipboardCheck size={20} />,
       section: "Main",
     },
     {
@@ -91,6 +108,30 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       icon: <UserCheck size={20} />,
       section: "Main",
     },
+    {
+      name: "Adoption Scheduling",
+      path: "/adoption-scheduling",
+      icon: <CalendarClock size={20} />,
+      section: "Main",
+    },
+    {
+      name: "Risk Assessments",
+      path: "/risk-assessments",
+      icon: <ShieldCheck size={20} />,
+      section: "Main",
+    },
+    {
+      name: "Document Review",
+      path: "/document-review",
+      icon: <FileCheck size={20} />,
+      section: "Main",
+    },
+    {
+      name: "Emergency Reports",
+      path: "/emergency-reports",
+      icon: <Siren size={20} />,
+      section: "Main",
+    },
 
     // ── Operations ────────────────────────────────────────────────────────────
     {
@@ -121,6 +162,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       roles: ["admin", "super_admin"],
     },
     {
+      name: "Payments",
+      path: "/payments",
+      icon: <CreditCard size={20} />,
+      section: "Finance",
+      roles: ["admin", "super_admin"],
+    },
+    {
       name: "Goods Donations",
       path: "/goods-donations",
       icon: <Package size={20} />,
@@ -143,9 +191,22 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       roles: ["admin", "super_admin"],
     },
     {
+      name: "Analytics",
+      path: "/analytics",
+      icon: <PieChart size={20} />,
+      section: "Insights",
+      roles: ["admin", "super_admin"],
+    },
+    {
       name: "Monitoring",
       path: "/monitoring",
       icon: <Monitor size={20} />,
+      section: "Insights",
+    },
+    {
+      name: "Feedback",
+      path: "/feedback",
+      icon: <MessageCircle size={20} />,
       section: "Insights",
     },
 
@@ -175,6 +236,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       name: "Staff",
       path: "/staff",
       icon: <UserCog size={20} />,
+      section: "Admin",
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: "Content",
+      path: "/content",
+      icon: <FileText size={20} />,
+      section: "Admin",
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: "User Verification",
+      path: "/user-verification",
+      icon: <BadgeCheck size={20} />,
+      section: "Admin",
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: "Shelters",
+      path: "/shelters",
+      icon: <Building2 size={20} />,
       section: "Admin",
       roles: ["admin", "super_admin"],
     },

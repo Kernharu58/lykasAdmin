@@ -39,6 +39,21 @@ import StaffManagement from "./pages/StaffManagement";
 import Volunteer from "./pages/Volunteer";
 import PetGallery from "./pages/PetGallery";
 import PetDetails from "./pages/PetDetails";
+// ── Previously built but never routed — see Phase 2 fix notes ──────────────────
+import PaymentsAdmin from "./pages/PaymentsAdmin";
+import GoodsDonations from "./pages/GoodsDonations";
+import ContentManagement from "./pages/ContentManagement";
+import FeedbackReviews from "./pages/FeedbackReviews";
+import RiskAssessments from "./pages/RiskAssessments";
+import UserVerification from "./pages/UserVerification";
+import ShelterManagement from "./pages/ShelterManagement";
+import EmergencyReports from "./pages/EmergencyReports";
+import DocumentReview from "./pages/DocumentReview";
+import AdoptionScheduling from "./pages/AdoptionScheduling";
+import Analytics from "./pages/Analytics";
+// ── Newly built out (were 0-line stubs) ─────────────────────────────────────────
+import PetManagement from "./pages/PetManagement";
+import AdoptionForm from "./pages/AdoptionForm";
 
 function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -61,6 +76,14 @@ function AdminLayout() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/pets" element={<ManagePets />} />
             <Route path="/pets/:id" element={<PetDetails />} />
+            <Route
+              path="/pet-management"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <PetManagement />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/gallery" element={<PetGallery />} />
             <Route path="/events" element={<Events />} />
             <Route path="/chat" element={<Chat />} />
@@ -72,6 +95,54 @@ function AdminLayout() {
               element={
                 <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
                   <Adoptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adoptions/new"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <AdoptionForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adoptions/:id"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <AdoptionForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/adoption-scheduling"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <AdoptionScheduling />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/risk-assessments"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <RiskAssessments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/document-review"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <DocumentReview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/emergency-reports"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "staff", "super_admin"]}>
+                  <EmergencyReports />
                 </ProtectedRoute>
               }
             />
@@ -116,10 +187,36 @@ function AdminLayout() {
               }
             />
             <Route
+              path="/payments"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <PaymentsAdmin />
+                </ProtectedRoute>
+              }
+            />
+            {/* Was already linked from the sidebar (/goods-donations) but had
+                no matching route — every click silently redirected to "/". */}
+            <Route
+              path="/goods-donations"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <GoodsDonations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/reports"
               element={
                 <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
                   <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <Analytics />
                 </ProtectedRoute>
               }
             />
@@ -165,6 +262,16 @@ function AdminLayout() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/feedback"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["admin", "staff", "super_admin"]}
+                >
+                  <FeedbackReviews />
+                </ProtectedRoute>
+              }
+            />
 
             {/* ── Notifications (admin+) ───────────────────────────────────── */}
             <Route
@@ -182,6 +289,30 @@ function AdminLayout() {
               element={
                 <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
                   <StaffManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/content"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <ContentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-verification"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <UserVerification />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/shelters"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                  <ShelterManagement />
                 </ProtectedRoute>
               }
             />
