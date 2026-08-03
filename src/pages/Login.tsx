@@ -52,12 +52,12 @@ export default function Login() {
   };
 
   const processSuccessfulLogin = (data: any) => {
-    const { token, user } = data;
+    const { token, refreshToken, user } = data;
     if (!['admin', 'staff', 'super_admin'].includes(user.role)) {
       setError("Access Denied: You do not have staff or admin privileges.");
       return;
     }
-    login(token, user);
+    login(token, user, refreshToken);
     navigate('/'); 
   };
 
